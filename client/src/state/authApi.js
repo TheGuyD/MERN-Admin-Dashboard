@@ -1,7 +1,40 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { setAuth, logout } from './authSlice'; // Import your actions
+
+const baseQuery = fetchBaseQuery({
+  baseUrl: "http://localhost:3000",
+  credentials: "include",
+  prepareHeaders: (headers, { getState }) => {
+    const token = getState().auth.accessToken;
+    if (token) {
+      headers.set("Authorization", `Bearer ${token}`);
+    }
+    return headers;
+  },
+});
+
+const baseQueryWithReauth = async (args, api, extraOptions) => {
+  let result = await baseQuery(args, api, extraOptions);
+
+  if (result?.error?.status === 403) {
+    console.log("Sending refresh token request...");
+
+    const refreshResult = await baseQuery('/auth/refresh', api, extraOptions);
+
+    if (refreshResult?.data) {
+      api.dispatch(setAuth({ accessToken: refreshResult.data.accessToken }));
+
+      result = await baseQuery(args, api, extraOptions);
+    } else {
+      api.dispatch(logout());
+    }
+  }
+
+  return result;
+};
 
 export const authApi = createApi({
-  baseQuery: fetchBaseQuery({ baseUrl: "http://localhost:3000" }), // new base URL for auth
+  baseQuery: baseQueryWithReauth,
   reducerPath: "authApi",
   tagTypes: ["Register", "Login", "Refresh", "Logout"],
   endpoints: (build) => ({
@@ -45,5 +78,4 @@ export const {
     useLoginMutation,
     useRefreshQuery,
     useLogoutMutation,
-  } = authApi;
-  
+} = authApi;

@@ -1,31 +1,20 @@
+// index.js
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
-import { configureStore } from '@reduxjs/toolkit';
-import globalReducer from "state";
 import { Provider } from 'react-redux';
-import { setupListeners } from '@reduxjs/toolkit/query';
-import { api } from "state/api";
-import { authApi } from "state/authApi"; // Import the new authApi
-
-const store = configureStore({
-  reducer: {
-    global: globalReducer,
-    [api.reducerPath]: api.reducer,
-    [authApi.reducerPath]: authApi.reducer, // Add the authApi reducer
-  },
-  middleware: (getDefault) =>
-    getDefault().concat(api.middleware, authApi.middleware), // Add the authApi middleware
-});
-
-setupListeners(store.dispatch);
+import { PersistGate } from 'redux-persist/integration/react';
+import { store, persistor } from './store';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
     <Provider store={store}>
-      <App />
+      {/* PersistGate delays rendering of the app until the persisted state has been rehydrated */}
+      <PersistGate loading={null} persistor={persistor}>
+        <App />
+      </PersistGate>
     </Provider>
   </React.StrictMode>
 );

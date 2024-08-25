@@ -1,10 +1,18 @@
-import { useContext, useDebugValue } from "react";
-import AuthContext from "../context/AuthProvider";
+import { useSelector, useDispatch } from 'react-redux';
+import { useDebugValue } from 'react';
+import { setAuth, logout } from 'state/authSlice'; // Import your actions
 
 const useAuth = () => {
-    const context = useContext(AuthContext);
-    useDebugValue(context.auth, auth => auth?.user ? "Logged In" : "Logged Out")
-    return context;
-}
+  const auth = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+
+  useDebugValue(auth, (auth) => (auth?.user ? 'Logged In' : 'Logged Out'));
+
+  return {
+    auth,
+    setAuth: (data) => dispatch(setAuth(data)),
+    logout: () => dispatch(logout()),
+  };
+};
 
 export default useAuth;
