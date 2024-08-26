@@ -9,17 +9,19 @@ import {
   InputAdornment,
   CircularProgress,
   Paper,
+  useTheme,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { EMAIL_REGEX, PWD_REGEX } from "helpers/validations";
 import { Link, useNavigate, useLocation, Navigate } from "react-router-dom";
 import useAuth from "hooks/useAuth";
 import { useLoginMutation } from "state/authApi";
-import ImageWithTransparentBG from "assets/parkerai.png";
+import ImageWithTransparentBG from "assets/ParkerAi-login.png";
 import AutoFillAwareTextField from "components/AutoFillAwareTextField";
 
 const Login = () => {
   const { setAuth } = useAuth();
+  const theme = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname || "/dashboard";
@@ -110,7 +112,7 @@ const Login = () => {
           }}
         >
           <Paper
-            elevation={15}
+            elevation={25}
             sx={{
               display: "flex",
               paddingTop: 4,
@@ -119,6 +121,12 @@ const Login = () => {
               borderRadius: 3,
               backgroundColor: "white",
               width: "100%",
+              transition: "box-shadow 0.3s ease, transform 0.3s ease", // Smooth transition for shadow and transform
+              "&:hover": {
+                boxShadow: "0px 10px 30px rgba(0, 0, 0, 0.5)", // More pronounced and farther shadow effect on hover
+                transform: "translateY(-10px)", // More noticeable upward movement
+                backgroundColor: "#f0f0f0", // Optional: slightly different background on hover
+              },
             }}
           >
             <Box
@@ -131,7 +139,7 @@ const Login = () => {
                 width: "60%", // Adjust to fit the image
               }}
             >
-              <Typography variant="h3" color="primary">
+              <Typography variant="h3" color={theme.palette.secondary[600]}>
                 Sign In
               </Typography>
               <Typography
@@ -188,12 +196,19 @@ const Login = () => {
                       <IconButton
                         onClick={() => setShowPassword(!showPassword)}
                         edge="end"
-                        color="primary"
+                        sx={{
+                          color: "primary.main",
+                        }}
                       >
                         {showPassword ? <VisibilityOff /> : <Visibility />}
                       </IconButton>
                     </InputAdornment>
                   ),
+                  sx: {
+                    "&.Mui-focused .MuiIconButton-root": {
+                      color: theme.palette.secondary[600], // Change the IconButton color when TextField is focused
+                    },
+                  },
                 }}
               />
 
@@ -206,7 +221,7 @@ const Login = () => {
               >
                 Sign In
               </Button>
-              <Box marginTop={10} >
+              <Box marginTop={20}>
                 <Typography variant="body2" sx={{ mt: 2 }} color="primary">
                   Need an Account?
                   <Link to="/register"> Sign Up</Link>

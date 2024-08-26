@@ -1,4 +1,3 @@
-// pages/Register.js
 import { useRef, useState, useEffect } from "react";
 import {
   Button,
@@ -9,17 +8,24 @@ import {
   InputAdornment,
   Paper,
   CircularProgress,
+  useTheme,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { Link, Navigate } from "react-router-dom";
-import { USER_REGEX, EMAIL_REGEX, PWD_REGEX } from "helpers/validations";
+import {
+  USER_REGEX,
+  EMAIL_REGEX,
+  PWD_REGEX,
+  PHONE_REGEX,
+} from "helpers/validations";
 import { useSignupMutation } from "state/authApi";
 import ImageWithTransparentBG from "assets/parkerai.png";
-import AutoFillAwareTextField from "components/AutoFillAwareTextField"; // Import the modularized component
+import AutoFillAwareTextField from "components/AutoFillAwareTextField";
 
 const Register = () => {
   const userRef = useRef();
   const errRef = useRef();
+  const theme = useTheme();
 
   const [userName, setUserName] = useState("");
   const [validUserName, setValidUserName] = useState(false);
@@ -38,6 +44,14 @@ const Register = () => {
   const [validMatch, setValidMatch] = useState(false);
   const [matchFocus, setMatchFocus] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [address, setAddress] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [validPhoneNumber, setValidPhoneNumber] = useState(false);
+  const [phoneFocus, setPhoneFocus] = useState(false);
 
   const [errMsg, setErrMsg] = useState("");
   const [success, setSuccess] = useState(false);
@@ -63,25 +77,54 @@ const Register = () => {
   }, [pwd, matchPwd]);
 
   useEffect(() => {
+    setValidPhoneNumber(PHONE_REGEX.test(phoneNumber)); // Assuming you have a regex for phone validation
+  }, [phoneNumber]);
+
+  useEffect(() => {
     setErrMsg("");
-  }, [userName, pwd, matchPwd, email]);
+  }, [
+    userName,
+    pwd,
+    matchPwd,
+    email,
+    firstName,
+    lastName,
+    companyName,
+    address,
+    phoneNumber,
+  ]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const v1 = USER_REGEX.test(userName);
     const v2 = PWD_REGEX.test(pwd);
     const v3 = EMAIL_REGEX.test(email);
-    if (!v1 || !v2 || !v3) {
+    const v4 = PHONE_REGEX.test(phoneNumber);
+    if (!v1 || !v2 || !v3 || !v4) {
       setErrMsg("Invalid Entry");
       return;
     }
     setLoading(true);
     try {
-      await signup({ username: userName, password: pwd, email }).unwrap();
+      await signup({
+        username: userName,
+        password: pwd,
+        email,
+        firstName,
+        lastName,
+        companyName,
+        address,
+        phoneNumber,
+      }).unwrap();
       setSuccess(true);
       setUserName("");
       setPwd("");
       setMatchPwd("");
+      setFirstName("");
+      setLastName("");
+      setCompanyName("");
+      setAddress("");
+      setPhoneNumber("");
     } catch (err) {
       if (!err?.status) {
         setErrMsg("No Server Response");
@@ -107,7 +150,7 @@ const Register = () => {
         </Container>
       ) : (
         <Container
-          maxWidth="md" // Increased width for image accommodation
+          maxWidth="md"
           sx={{
             display: "flex",
             justifyContent: "center",
@@ -116,15 +159,22 @@ const Register = () => {
           }}
         >
           <Paper
-            elevation={15}
+            elevation={25}
             sx={{
               display: "flex",
+              flexDirection: "row",
               paddingTop: 4,
               paddingLeft: 4,
-              paddingRight: 4,
               borderRadius: 3,
               backgroundColor: "white",
-              width: "100%",
+              width: "70%", // Keep the width as before
+              marginTop: "auto",
+              marginBottom: "auto",
+              "&:hover": {
+                boxShadow: "0px 10px 30px rgba(0, 0, 0, 0.5)", // More pronounced and farther shadow effect on hover
+                transform: "translateY(-10px)", // More noticeable upward movement
+                backgroundColor: "#f0f0f0", // Optional: slightly different background on hover
+              },
             }}
           >
             <Box
@@ -133,11 +183,16 @@ const Register = () => {
               sx={{
                 display: "flex",
                 flexDirection: "column",
-                gap: 2,
-                width: "60%", // Adjust to fit the image
+                gap: 2, // Set gap to add some space between each TextField
+                width: "70%",
               }}
             >
-              <Typography variant="h5" color="primary">
+              <Typography
+                variant="h3" // Smaller variant to reduce height
+                color={theme.palette.secondary[600]}
+                marginTop={1} // Smaller top margin
+                marginBottom={1} // Smaller bottom margin
+              >
                 Register
               </Typography>
               <Typography
@@ -152,6 +207,7 @@ const Register = () => {
               <AutoFillAwareTextField
                 label="Username"
                 variant="outlined"
+                size="small" // Reduce size to make the text field smaller
                 inputRef={userRef}
                 autoComplete="off"
                 onChange={(value) => setUserName(value)}
@@ -175,6 +231,7 @@ const Register = () => {
               <AutoFillAwareTextField
                 label="Email"
                 variant="outlined"
+                size="small" // Reduce size to make the text field smaller
                 onChange={(value) => setEmail(value)}
                 value={email}
                 required
@@ -191,6 +248,7 @@ const Register = () => {
               <AutoFillAwareTextField
                 label="Password"
                 variant="outlined"
+                size="small" // Reduce size to make the text field smaller
                 type={showPassword ? "text" : "password"}
                 onChange={(value) => setPwd(value)}
                 value={pwd}
@@ -198,6 +256,7 @@ const Register = () => {
                 error={!validPwd && pwd}
                 helperText={
                   pwdFocus &&
+                  pwd &&
                   !validPwd && (
                     <span>
                       8 to 24 characters. Must include uppercase and lowercase
@@ -213,18 +272,26 @@ const Register = () => {
                       <IconButton
                         onClick={() => setShowPassword(!showPassword)}
                         edge="end"
-                        color="primary"
+                        sx={{
+                          color: "primary.main",
+                        }}
                       >
                         {showPassword ? <VisibilityOff /> : <Visibility />}
                       </IconButton>
                     </InputAdornment>
                   ),
+                  sx: {
+                    "&.Mui-focused .MuiIconButton-root": {
+                      color: theme.palette.secondary[600], // Change the IconButton color when TextField is focused
+                    },
+                  },
                 }}
               />
 
               <AutoFillAwareTextField
                 label="Confirm Password"
                 variant="outlined"
+                size="small" // Reduce size to make the text field smaller
                 type={showConfirmPassword ? "text" : "password"}
                 onChange={(value) => setMatchPwd(value)}
                 value={matchPwd}
@@ -238,39 +305,99 @@ const Register = () => {
                 }
                 onFocus={() => setMatchFocus(true)}
                 onBlur={() => setMatchFocus(false)}
-              
+              />
+
+              <AutoFillAwareTextField
+                label="First Name"
+                variant="outlined"
+                size="small" // Reduce size to make the text field smaller
+                onChange={(value) => setFirstName(value)}
+                value={firstName}
+                required
+              />
+
+              <AutoFillAwareTextField
+                label="Last Name"
+                variant="outlined"
+                size="small" // Reduce size to make the text field smaller
+                onChange={(value) => setLastName(value)}
+                value={lastName}
+                required
+              />
+
+              <AutoFillAwareTextField
+                label="Company Name"
+                variant="outlined"
+                size="small" // Reduce size to make the text field smaller
+                onChange={(value) => setCompanyName(value)}
+                value={companyName}
+              />
+
+              <AutoFillAwareTextField
+                label="Address"
+                variant="outlined"
+                size="small" // Reduce size to make the text field smaller
+                onChange={(value) => setAddress(value)}
+                value={address}
+              />
+
+              <AutoFillAwareTextField
+                label="Phone Number"
+                variant="outlined"
+                size="small" // Reduce size to make the text field smaller
+                onChange={(value) => setPhoneNumber(value)}
+                value={phoneNumber}
+                required
+                error={!validPhoneNumber && phoneNumber}
+                helperText={
+                  phoneFocus &&
+                  phoneNumber &&
+                  !validPhoneNumber && <span>Not a valid Phone Number.</span>
+                }
+                onFocus={() => setPhoneFocus(true)}
+                onBlur={() => setPhoneFocus(false)}
               />
 
               <Button
                 type="submit"
                 variant="contained"
                 color="primary"
-                disabled={!validUserName || !validPwd || !validMatch || loading}
+                disabled={
+                  !validUserName ||
+                  !validPwd ||
+                  !validMatch ||
+                  !validEmail ||
+                  !validPhoneNumber ||
+                  loading
+                }
                 startIcon={loading && <CircularProgress size={24} />}
               >
                 Sign Up
               </Button>
-              <Box marginTop={10} marginBottom={5}>
-                <Typography variant="body2" sx={{ mt: 2 }} color="primary" >
+              <Box marginBottom={2}>
+                {" "}
+                {/* Reduce bottom margin */}
+                <Typography variant="body2" sx={{ mt: 1 }} color="primary">
                   Already registered?
                   <Link to="/login"> Sign In</Link>
                 </Typography>
               </Box>
             </Box>
 
-            {/* Image on the right side */}
+            {/* Image on the right side but moved to the bottom */}
             <Box
               sx={{
                 display: "flex",
+                flexDirection: "column",
                 alignItems: "center",
-                justifyContent: "center",
-                width: "40%", // Adjust this as necessary
+                justifyContent: "flex-end", // Move the image to the bottom
+                width: "30%",
               }}
-              >
+            >
               <img
                 src={ImageWithTransparentBG}
                 alt="Register illustration"
-                style={{ maxWidth: "100%", height: "auto" }}
+                style={{ maxWidth: "100%", height: "auto", marginBottom: 0 }}
               />
             </Box>
           </Paper>
