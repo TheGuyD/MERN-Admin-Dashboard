@@ -9,6 +9,7 @@ import {
 } from "@mui/icons-material";
 import FlexBetween from "components/FlexBetween";
 import { useDispatch } from "react-redux";
+import { logout } from "state/authSlice";
 import { setMode } from "state/modeSlice";
 import profileImage from "assets/profile.png";
 import {
@@ -23,14 +24,38 @@ import {
   useTheme,
   Box,
 } from "@mui/material";
+import { useNavigate } from "react-router-dom"; // Import useNavigate for navigation
+import { useLogoutMutation } from "state/authApi"; // Adjust the import path as necessary
 
 const Navbar = ({ user, isSidebarOpen, setIsSidebarOpen }) => {
   const dispatch = useDispatch();
   const theme = useTheme();
+  const navigate = useNavigate(); // Initialize useNavigate for navigation
   const [anchorEl, setAnchorEl] = useState(null);
   const isOpen = Boolean(anchorEl);
   const handleClick = (event) => setAnchorEl(event.currentTarget);
   const handleClose = () => setAnchorEl(null);
+
+  const [logoutApi] = useLogoutMutation();
+
+  const handleLogout = async () => {
+    try {
+      await logoutApi().unwrap();
+      dispatch(logout());
+      // Optionally, redirect to the login page or any other page
+      // window.location.href = '/login';
+    } catch (error) {
+      console.error("Failed to logout:", error);
+    } finally {
+      handleClose();
+    }
+  };
+
+  const handleUserInfoClick = () => {
+    handleClose();
+    navigate("/user-information", { state: { user } }); // Navigate with user state
+  };
+
   return (
     <AppBar
       sx={{
@@ -67,7 +92,7 @@ const Navbar = ({ user, isSidebarOpen, setIsSidebarOpen }) => {
               <LightModeOutlined sx={{ fontSize: "25px" }} />
             )}
           </IconButton>
-          <IconButton>
+          <IconButton onClick={handleClick}>
             <SettingsOutlined sx={{ fontSize: "25px" }} />
           </IconButton>
           <FlexBetween>
@@ -96,13 +121,7 @@ const Navbar = ({ user, isSidebarOpen, setIsSidebarOpen }) => {
                   fontSize="0.85rem"
                   sx={{ color: theme.palette.secondary[100] }}
                 >
-                  {user.name}
-                </Typography>
-                <Typography
-                  fontSize="0.75rem"
-                  sx={{ color: theme.palette.secondary[200] }}
-                >
-                  {user.occupation}
+                  {user.firstName + " " + user.lastName}
                 </Typography>
               </Box>
               <ArrowDropDownOutlined
@@ -115,7 +134,8 @@ const Navbar = ({ user, isSidebarOpen, setIsSidebarOpen }) => {
               onClose={handleClose}
               anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
             >
-              <MenuItem onClick={handleClose}>Log Out</MenuItem>
+              <MenuItem onClick={handleUserInfoClick}>User Information</MenuItem>
+              <MenuItem onClick={handleLogout}>Log Out</MenuItem>
             </Menu>
           </FlexBetween>
         </FlexBetween>

@@ -22,7 +22,7 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
     const refreshResult = await baseQuery('/auth/refresh', api, extraOptions);
 
     if (refreshResult?.data) {
-      api.dispatch(setAuth({ accessToken: refreshResult.data.accessToken }));
+      api.dispatch(setAuth({ userId: refreshResult.data.userId,accessToken: refreshResult.data.accessToken }));
 
       result = await baseQuery(args, api, extraOptions);
     } else {
@@ -65,11 +65,12 @@ export const authApi = createApi({
     logout: build.mutation({
       query: () => ({
         url: "auth/logout",
-        method: "POST",
+        method: "POST", 
         credentials: "include",
       }),
       providesTags: ["Logout"],
     }),
+    
   }),
 });
 

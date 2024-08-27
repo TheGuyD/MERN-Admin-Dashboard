@@ -7,6 +7,7 @@ import storage from 'redux-persist/lib/storage';
 import { setupListeners } from '@reduxjs/toolkit/query';
 import { api } from 'state/api';
 import { authApi } from 'state/authApi';
+import { dataManagementApi } from 'state/dataManagementApi'; // Import your dataManagementApi
 
 // Configuration for redux-persist
 const persistConfig = {
@@ -21,6 +22,7 @@ const rootReducer = combineReducers({
   auth: authReducer, // Use the auth reducer here
   [api.reducerPath]: api.reducer,
   [authApi.reducerPath]: authApi.reducer,
+  [dataManagementApi.reducerPath]: dataManagementApi.reducer, // Add the dataManagementApi reducer
 });
 
 // Create a persisted reducer
@@ -31,7 +33,7 @@ const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: false, // Required to avoid issues with redux-persist
-    }).concat(api.middleware, authApi.middleware),
+    }).concat(api.middleware, authApi.middleware, dataManagementApi.middleware), // Add the dataManagementApi middleware
 });
 
 const persistor = persistStore(store);

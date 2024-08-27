@@ -20,6 +20,7 @@ import Performance from "scenes/performance";
 import Register from "scenes/register";
 import Login from "scenes/login";
 import RequireAuth from "components/RequireAuth";
+import UserInformation from "scenes/userInformation"
 
 function App() {
   const mode = useSelector((state) => state.global.mode);
@@ -49,6 +50,10 @@ function App() {
                   <Route path="/breakdown" element={<Breakdown />} />
                   <Route path="/admin" element={<Admin />} />
                   <Route path="/Performance" element={<Performance />} />
+                  <Route
+                    path="/user-information"
+                    element={<UserInformation />}
+                  />
                 </Route>
               </Route>
             </Routes>

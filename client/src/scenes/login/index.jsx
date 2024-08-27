@@ -1,4 +1,3 @@
-// pages/Login.js
 import React, { useRef, useEffect, useState } from "react";
 import {
   Button,
@@ -18,6 +17,7 @@ import useAuth from "hooks/useAuth";
 import { useLoginMutation } from "state/authApi";
 import ImageWithTransparentBG from "assets/ParkerAi-login.png";
 import AutoFillAwareTextField from "components/AutoFillAwareTextField";
+
 
 const Login = () => {
   const { setAuth } = useAuth();
@@ -112,7 +112,7 @@ const Login = () => {
           }}
         >
           <Paper
-            elevation={25}
+            elevation={24}
             sx={{
               display: "flex",
               paddingTop: 4,
@@ -121,11 +121,11 @@ const Login = () => {
               borderRadius: 3,
               backgroundColor: "white",
               width: "100%",
-              transition: "box-shadow 0.3s ease, transform 0.3s ease", // Smooth transition for shadow and transform
+              transition: "box-shadow 0.3s ease, transform 0.3s ease",
               "&:hover": {
-                boxShadow: "0px 10px 30px rgba(0, 0, 0, 0.5)", // More pronounced and farther shadow effect on hover
-                transform: "translateY(-10px)", // More noticeable upward movement
-                backgroundColor: "#f0f0f0", // Optional: slightly different background on hover
+                boxShadow: "0px 10px 30px rgba(0, 0, 0, 0.5)",
+                transform: "translateY(-10px)",
+                backgroundColor: "#f0f0f0",
               },
             }}
           >
@@ -136,7 +136,7 @@ const Login = () => {
                 display: "flex",
                 flexDirection: "column",
                 gap: 2,
-                width: "60%", // Adjust to fit the image
+                width: "60%",
               }}
             >
               <Typography variant="h3" color={theme.palette.secondary[600]}>
@@ -159,7 +159,7 @@ const Login = () => {
                 onChange={(value) => setEmail(value)}
                 value={email}
                 required
-                error={!validEmail && email}
+                error={!validEmail && Boolean(email)}
                 helperText={
                   emailFocus &&
                   email &&
@@ -173,12 +173,12 @@ const Login = () => {
                 label="Password"
                 variant="outlined"
                 type={showPassword ? "text" : "password"}
-                inputRef={pwdRef} // Added reference to the password field
+                inputRef={pwdRef}
                 autoComplete="current-password"
                 onChange={(value) => setPwd(value)}
                 value={pwd}
                 required
-                error={!validPwd && pwd}
+                error={!validPwd && Boolean(pwd)}
                 helperText={
                   pwdFocus &&
                   !validPwd && (
@@ -206,12 +206,11 @@ const Login = () => {
                   ),
                   sx: {
                     "&.Mui-focused .MuiIconButton-root": {
-                      color: theme.palette.secondary[600], // Change the IconButton color when TextField is focused
+                      color: theme.palette.secondary[600],
                     },
                   },
                 }}
               />
-
               <Button
                 type="submit"
                 variant="contained"
@@ -228,13 +227,12 @@ const Login = () => {
                 </Typography>
               </Box>
             </Box>
-            {/* Image on the right side */}
             <Box
               sx={{
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                width: "40%", // Adjust this as necessary
+                width: "40%",
               }}
             >
               <img

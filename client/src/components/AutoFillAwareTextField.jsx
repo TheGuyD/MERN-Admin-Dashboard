@@ -65,11 +65,11 @@ const AutoFillAwareTextField = ({
         },
         "& .MuiInputBase-input": {
           backgroundColor: "white !important",
-          color: "#000000 !important", // User input text color is black
-          caretColor: "#000000 !important", // Caret color is black
+          color: "#000000 !important",
+          caretColor: "#000000 !important",
           "&::placeholder": {
-            color: theme.palette.secondary[600], // Placeholder text color
-            opacity: 1, // Ensure the opacity is set
+            color: theme.palette.secondary[600],
+            opacity: 1,
           },
           "&::selection": {
             backgroundColor: "#4d547d !important",
@@ -77,7 +77,7 @@ const AutoFillAwareTextField = ({
           },
           "&:-webkit-autofill": {
             WebkitBoxShadow: "0 0 0px 1000px white inset !important",
-            "-webkit-text-fill-color": "#000000 !important", // Autofill text color is black
+            WebkitTextFillColor: "#000000 !important", // Use camelCase here
           },
         },
       }}

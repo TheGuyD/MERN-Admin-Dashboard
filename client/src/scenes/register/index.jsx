@@ -17,6 +17,7 @@ import {
   EMAIL_REGEX,
   PWD_REGEX,
   PHONE_REGEX,
+  NAME_REGEX,
 } from "helpers/validations";
 import { useSignupMutation } from "state/authApi";
 import ImageWithTransparentBG from "assets/parkerai.png";
@@ -46,8 +47,17 @@ const Register = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [firstName, setFirstName] = useState("");
+  const [validFirstName, setValidFirstName] = useState(false);
+  const [firstNameFocus, setFirstNameFocus] = useState(false);
+
   const [lastName, setLastName] = useState("");
+  const [validLastName, setValidLastName] = useState(false);
+  const [lastNameFocus, setLastNameFocus] = useState(false);
+
   const [companyName, setCompanyName] = useState("");
+  const [validCompanyName, setValidCompanyName] = useState(false);
+  const [companyNameFocus, setCompanyNameFocus] = useState(false);
+
   const [address, setAddress] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [validPhoneNumber, setValidPhoneNumber] = useState(false);
@@ -77,8 +87,20 @@ const Register = () => {
   }, [pwd, matchPwd]);
 
   useEffect(() => {
+    setValidFirstName(NAME_REGEX.test(firstName));
+  }, [firstName]);
+
+  useEffect(() => {
+    setValidLastName(NAME_REGEX.test(lastName));
+  }, [lastName]);
+
+  useEffect(() => {
     setValidPhoneNumber(PHONE_REGEX.test(phoneNumber)); // Assuming you have a regex for phone validation
   }, [phoneNumber]);
+
+  useEffect(() => {
+    setValidCompanyName(NAME_REGEX.test(companyName));
+  }, [companyName]);
 
   useEffect(() => {
     setErrMsg("");
@@ -100,13 +122,25 @@ const Register = () => {
     const v2 = PWD_REGEX.test(pwd);
     const v3 = EMAIL_REGEX.test(email);
     const v4 = PHONE_REGEX.test(phoneNumber);
-    if (!v1 || !v2 || !v3 || !v4) {
+    const v5 = NAME_REGEX.test(firstName);
+    const v6 = NAME_REGEX.test(lastName);
+    const v7 = NAME_REGEX.test(companyName);
+
+    if (!v1 || !v2 || !v3 || !v4 || !v5 || !v6 || !v7) {
       setErrMsg("Invalid Entry");
       return;
     }
     setLoading(true);
     try {
-      await signup({
+      console.log("username: ", userName);
+      console.log("password: ", pwd);
+      console.log("email: ", email);
+      console.log("firstName: ", firstName);
+      console.log("lastName: ", lastName);
+      console.log("companyName: ", companyName);
+      console.log("address: ", address);
+      console.log("phoneNumber: ", phoneNumber);
+      const response = await signup({
         username: userName,
         password: pwd,
         email,
@@ -116,6 +150,8 @@ const Register = () => {
         address,
         phoneNumber,
       }).unwrap();
+
+      console.log("response: ", response);
       setSuccess(true);
       setUserName("");
       setPwd("");
@@ -159,7 +195,7 @@ const Register = () => {
           }}
         >
           <Paper
-            elevation={25}
+            elevation={24}
             sx={{
               display: "flex",
               flexDirection: "row",
@@ -213,7 +249,7 @@ const Register = () => {
                 onChange={(value) => setUserName(value)}
                 value={userName}
                 required
-                error={!validUserName && userName}
+                error={!validUserName && Boolean(userName)}
                 helperText={
                   userNameFocus &&
                   userName &&
@@ -235,7 +271,7 @@ const Register = () => {
                 onChange={(value) => setEmail(value)}
                 value={email}
                 required
-                error={!validEmail && email}
+                error={!validEmail && Boolean(email)}
                 helperText={
                   emailFocus &&
                   email &&
@@ -253,7 +289,7 @@ const Register = () => {
                 onChange={(value) => setPwd(value)}
                 value={pwd}
                 required
-                error={!validPwd && pwd}
+                error={!validPwd && Boolean(pwd)}
                 helperText={
                   pwdFocus &&
                   pwd &&
@@ -296,7 +332,7 @@ const Register = () => {
                 onChange={(value) => setMatchPwd(value)}
                 value={matchPwd}
                 required
-                error={!validMatch && matchPwd}
+                error={!validMatch && Boolean(matchPwd)}
                 helperText={
                   matchFocus &&
                   !validMatch && (
@@ -305,6 +341,32 @@ const Register = () => {
                 }
                 onFocus={() => setMatchFocus(true)}
                 onBlur={() => setMatchFocus(false)}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={() =>
+                          setShowConfirmPassword(!showConfirmPassword)
+                        }
+                        edge="end"
+                        sx={{
+                          color: "primary.main",
+                        }}
+                      >
+                        {showConfirmPassword ? (
+                          <VisibilityOff />
+                        ) : (
+                          <Visibility />
+                        )}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                  sx: {
+                    "&.Mui-focused .MuiIconButton-root": {
+                      color: theme.palette.secondary[600], // Change the IconButton color when TextField is focused
+                    },
+                  },
+                }}
               />
 
               <AutoFillAwareTextField
@@ -314,6 +376,16 @@ const Register = () => {
                 onChange={(value) => setFirstName(value)}
                 value={firstName}
                 required
+                error={!validFirstName && Boolean(firstName)}
+                helperText={
+                  firstNameFocus &&
+                  firstName &&
+                  !validFirstName && (
+                    <span>First Name must be at least 2 letters long.</span>
+                  )
+                }
+                onFocus={() => setFirstNameFocus(true)}
+                onBlur={() => setFirstNameFocus(false)}
               />
 
               <AutoFillAwareTextField
@@ -323,6 +395,16 @@ const Register = () => {
                 onChange={(value) => setLastName(value)}
                 value={lastName}
                 required
+                error={!validLastName && Boolean(lastName)}
+                helperText={
+                  lastNameFocus &&
+                  lastName &&
+                  !validLastName && (
+                    <span>Last Name must be at least 2 letters long.</span>
+                  )
+                }
+                onFocus={() => setLastNameFocus(true)}
+                onBlur={() => setLastNameFocus(false)}
               />
 
               <AutoFillAwareTextField
@@ -331,6 +413,17 @@ const Register = () => {
                 size="small" // Reduce size to make the text field smaller
                 onChange={(value) => setCompanyName(value)}
                 value={companyName}
+                required
+                error={!validCompanyName && Boolean(companyName)}
+                helperText={
+                  companyNameFocus &&
+                  companyName &&
+                  !validCompanyName && (
+                    <span>Company Name must be at least 2 letters long.</span>
+                  )
+                }
+                onFocus={() => setCompanyNameFocus(true)}
+                onBlur={() => setCompanyNameFocus(false)}
               />
 
               <AutoFillAwareTextField
@@ -339,6 +432,7 @@ const Register = () => {
                 size="small" // Reduce size to make the text field smaller
                 onChange={(value) => setAddress(value)}
                 value={address}
+                required
               />
 
               <AutoFillAwareTextField
@@ -347,8 +441,7 @@ const Register = () => {
                 size="small" // Reduce size to make the text field smaller
                 onChange={(value) => setPhoneNumber(value)}
                 value={phoneNumber}
-                required
-                error={!validPhoneNumber && phoneNumber}
+                error={!validPhoneNumber && Boolean(phoneNumber)}
                 helperText={
                   phoneFocus &&
                   phoneNumber &&
@@ -363,11 +456,12 @@ const Register = () => {
                 variant="contained"
                 color="primary"
                 disabled={
-                  !validUserName ||
-                  !validPwd ||
-                  !validMatch ||
-                  !validEmail ||
-                  !validPhoneNumber ||
+                  // !validUserName ||
+                  // !validPwd ||
+                  // !validMatch ||
+                  // !validEmail ||
+                  // !validFirstName ||
+                  // !validLastName ||
                   loading
                 }
                 startIcon={loading && <CircularProgress size={24} />}

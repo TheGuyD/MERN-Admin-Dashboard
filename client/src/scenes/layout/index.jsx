@@ -4,14 +4,16 @@ import { Outlet } from "react-router-dom";
 import { useSelector } from "react-redux";
 import Navbar from "components/Navbar";
 import Sidebar from "components/Sidebar";
-import { useGetUserQuery } from "state/api";
+import { useGetUserInformationQuery } from "state/dataManagementApi";
 
 const Layout = () => {
   const isNonMobile = useMediaQuery("(min-width: 600px)");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const userId = useSelector((state) => state.global.userId);
 
-  const { data } = useGetUserQuery(userId);
+  // Get userId from authSlice
+  const userId = useSelector((state) => state.auth.userId); // Assuming user object has an id property
+
+  const { data } = useGetUserInformationQuery(userId);
 
   return (
     <Box display={isNonMobile ? "flex" : "block"} width="100%" height="100%">
