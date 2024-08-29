@@ -27,7 +27,7 @@ import {
 import { useNavigate } from "react-router-dom"; // Import useNavigate for navigation
 import { useLogoutMutation } from "state/authApi"; // Adjust the import path as necessary
 
-const Navbar = ({ user, isSidebarOpen, setIsSidebarOpen }) => {
+const Navbar = ({ profileImageUrl , user, isSidebarOpen, setIsSidebarOpen }) => {
   const dispatch = useDispatch();
   const theme = useTheme();
   const navigate = useNavigate(); // Initialize useNavigate for navigation
@@ -106,10 +106,10 @@ const Navbar = ({ user, isSidebarOpen, setIsSidebarOpen }) => {
                 gap: "1rem",
               }}
             >
-              <Box
+             <Box
                 component="img"
                 alt="profile"
-                src={profileImage}
+                src={profileImageUrl || profileImage} // Use profileImageUrl passed from Layout
                 height="32px"
                 width="32px"
                 borderRadius="50%"
@@ -134,7 +134,9 @@ const Navbar = ({ user, isSidebarOpen, setIsSidebarOpen }) => {
               onClose={handleClose}
               anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
             >
-              <MenuItem onClick={handleUserInfoClick}>User Information</MenuItem>
+              <MenuItem onClick={handleUserInfoClick}>
+                User Information
+              </MenuItem>
               <MenuItem onClick={handleLogout}>Log Out</MenuItem>
             </Menu>
           </FlexBetween>

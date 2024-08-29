@@ -7,7 +7,7 @@ import { themeSettings } from "theme";
 import { AuthProvider } from "context/AuthProvider";
 import Layout from "scenes/layout";
 import Dashboard from "scenes/dashboard";
-import Products from "scenes/products";
+import MyParkingLots from "scenes/myparkinglots";
 import Customers from "scenes/customers";
 import Transactions from "scenes/transactions";
 import Geography from "scenes/geography";
@@ -40,7 +40,7 @@ function App() {
               <Route element={<RequireAuth />}>
                 <Route element={<Layout />}>
                   <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/products" element={<Products />} />
+                  <Route path="/my-parking-lots" element={<MyParkingLots />} />
                   <Route path="/customers" element={<Customers />} />
                   <Route path="/transactions" element={<Transactions />} />
                   <Route path="/geography" element={<Geography />} />

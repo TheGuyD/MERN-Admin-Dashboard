@@ -4,12 +4,9 @@ import {
   Typography,
   Container,
   Box,
-  InputAdornment,
   CircularProgress,
   useTheme,
-  TextField,
 } from "@mui/material";
-import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { useLocation, useNavigate } from "react-router-dom";
 import AutoFillAwareTextField from "components/AutoFillAwareTextField";
 import {
@@ -17,43 +14,51 @@ import {
   EMAIL_REGEX,
   PHONE_REGEX,
   NAME_REGEX,
-} from "helpers/validations"; // Adjust import paths as necessary
+} from "helpers/validations";
+import {
+  useUpdateUserMutation,
+  useDeleteUserMutation,
+  useRetriveImageQuery,
+  useUploadPhotoMutation,
+} from "state/dataManagementApi";
+import Header from "components/Header";
+import ImagePicker from "components/ImagePicker";
 
 const UserInformation = () => {
   const location = useLocation();
-  const user = location.state?.user; // Access the user object passed via state
+  const user = location.state?.user;
   const theme = useTheme();
   const navigate = useNavigate();
 
   // State hooks for form fields
   const [userName, setUserName] = useState(user?.username || "");
   const [validUserName, setValidUserName] = useState(false);
-  const [userNameFocus, setUserNameFocus] = useState(false);
-
   const [email, setEmail] = useState(user?.email || "");
   const [validEmail, setValidEmail] = useState(false);
-  const [emailFocus, setEmailFocus] = useState(false);
-
   const [firstName, setFirstName] = useState(user?.firstName || "");
   const [validFirstName, setValidFirstName] = useState(false);
-  const [firstNameFocus, setFirstNameFocus] = useState(false);
-
   const [lastName, setLastName] = useState(user?.lastName || "");
   const [validLastName, setValidLastName] = useState(false);
-  const [lastNameFocus, setLastNameFocus] = useState(false);
-
   const [companyName, setCompanyName] = useState(user?.companyName || "");
   const [validCompanyName, setValidCompanyName] = useState(false);
-  const [companyNameFocus, setCompanyNameFocus] = useState(false);
-
   const [address, setAddress] = useState(user?.address || "");
-
   const [phoneNumber, setPhoneNumber] = useState(user?.phoneNumber || "");
   const [validPhoneNumber, setValidPhoneNumber] = useState(false);
-  const [phoneFocus, setPhoneFocus] = useState(false);
-
   const [errMsg, setErrMsg] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
   const [loading, setLoading] = useState(false);
+  const [avatar, setAvatar] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null); // For uploading the file
+
+
+  // Retrieve the user's current profile image
+  const { data: imageData } = useRetriveImageQuery({
+    imageName: "profile.png",
+    path: `${user._id}/userinformation`,
+  });
+  const [updateUserInformation] = useUpdateUserMutation();
+  const [deleteUser] = useDeleteUserMutation();
+  const [uploadImage] = useUploadPhotoMutation();
 
   useEffect(() => {
     setValidUserName(USER_REGEX.test(userName));
@@ -81,27 +86,57 @@ const UserInformation = () => {
 
   useEffect(() => {
     setErrMsg("");
+    setSuccessMsg("");
   }, [userName, email, firstName, lastName, companyName, address, phoneNumber]);
+
+  // Set the fetched profile image in the ImagePicker
+  useEffect(() => {
+    if (imageData && imageData.downloadURL) {
+      setAvatar(imageData.downloadURL);
+    }
+  }, [imageData]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const v1 = USER_REGEX.test(userName);
-    const v2 = EMAIL_REGEX.test(email);
-    const v3 = NAME_REGEX.test(firstName);
-    const v4 = NAME_REGEX.test(lastName);
-    const v5 = NAME_REGEX.test(companyName);
-    const v6 = PHONE_REGEX.test(phoneNumber);
 
-    if (!v1 || !v2 || !v3 || !v4 || !v5 || !v6) {
+    if (
+      !validUserName ||
+      !validEmail ||
+      !validFirstName ||
+      !validLastName ||
+      !validCompanyName ||
+      !validPhoneNumber
+    ) {
       setErrMsg("Invalid Entry");
       return;
     }
+
     setLoading(true);
+
     try {
-      // Make your API call to update user information
-      // Example: await updateUserInformation({ username, email, firstName, lastName, companyName, address, phoneNumber });
-      console.log("User information updated");
-      navigate("/dashboard"); // Redirect to another page after successful update
+      // Update user information
+      const response = await updateUserInformation({
+        userId: user._id,
+        username: userName,
+        email,
+        firstName,
+        lastName,
+        companyName,
+        phoneNumber,
+      }).unwrap();
+
+      setSuccessMsg(response.message);
+
+      // If a new avatar is selected, upload it
+      if (selectedFile) {
+        await uploadImage({
+          image: selectedFile,
+          path: `${user._id}/userinformation`,
+        });
+      }
+
+      // Optionally, navigate to another page after the update
+      // navigate("/dashboard");
     } catch (err) {
       console.error("Failed to update user information", err);
       setErrMsg("Update failed");
@@ -109,6 +144,40 @@ const UserInformation = () => {
       setLoading(false);
     }
   };
+
+  const handleDeleteAccount = async () => {
+    setLoading(true);
+    try {
+      const response = await deleteUser(user._id).unwrap();
+      setSuccessMsg(response.message);
+      navigate("/login");
+    } catch (err) {
+      console.error("Failed to delete user", err);
+      setErrMsg("Delete failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleImageChange = (file) => {
+    const newFileName = `profile.${file.name.split(".").pop()}`; // This will keep the original file extension
+    const renamedFile = new File([file], newFileName, {
+      type: file.type,
+      lastModified: file.lastModified,
+    });
+  
+    // Create a FileReader to read the file and convert it to a data URL
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setAvatar(reader.result); // Set the data URL as the avatar image for immediate display
+    };
+    reader.readAsDataURL(renamedFile);
+  
+    // Store the file for later upload
+    setSelectedFile(renamedFile);
+  };
+
+
 
   return (
     <Container
@@ -126,13 +195,31 @@ const UserInformation = () => {
         sx={{
           display: "flex",
           flexDirection: "column",
-          gap: 2, // Set gap to add some space between each TextField
+          gap: 2,
           width: "100%",
         }}
       >
-        <Typography variant="h4" color={theme.palette.secondary[600]}>
-          User Information
-        </Typography>
+        <Box mb="175px">
+          <Header
+            title="User Information"
+            subtitle="Your Personal information"
+          />
+        </Box>
+
+        {/* Centered Image Picker */}
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <ImagePicker
+            onImageChange={handleImageChange}
+            imageUrl={avatar} // Pass the current or newly selected avatar
+          />
+        </Box>
+
         <Typography
           variant="body2"
           color="error"
@@ -141,17 +228,24 @@ const UserInformation = () => {
           {errMsg}
         </Typography>
 
+        <Typography
+          variant="body2"
+          color="success.main"
+          sx={{ display: successMsg ? "block" : "none" }}
+        >
+          {successMsg}
+        </Typography>
+
         <AutoFillAwareTextField
           label="Username"
           variant="outlined"
           size="small"
           autoComplete="off"
-          onChange={(value) => setUserName(value)}
+          onChange={(e) => setUserName(e.target.value)}
           value={userName}
           required
           error={!validUserName && Boolean(userName)}
           helperText={
-            userNameFocus &&
             userName &&
             !validUserName && (
               <span>
@@ -160,89 +254,72 @@ const UserInformation = () => {
               </span>
             )
           }
-          onFocus={() => setUserNameFocus(true)}
-          onBlur={() => setUserNameFocus(false)}
         />
 
         <AutoFillAwareTextField
           label="Email"
           variant="outlined"
           size="small"
-          onChange={(value) => setEmail(value)}
+          onChange={(e) => setEmail(e.target.value)}
           value={email}
           required
           error={!validEmail && Boolean(email)}
-          helperText={
-            emailFocus &&
-            email &&
-            !validEmail && <span>Not a valid Email.</span>
-          }
-          onFocus={() => setEmailFocus(true)}
-          onBlur={() => setEmailFocus(false)}
+          helperText={email && !validEmail && <span>Not a valid Email.</span>}
         />
 
         <AutoFillAwareTextField
           label="First Name"
           variant="outlined"
           size="small"
-          onChange={(value) => setFirstName(value)}
+          onChange={(e) => setFirstName(e.target.value)}
           value={firstName}
           required
           error={!validFirstName && Boolean(firstName)}
           helperText={
-            firstNameFocus &&
             firstName &&
             !validFirstName && (
               <span>First Name must be at least 2 letters long.</span>
             )
           }
-          onFocus={() => setFirstNameFocus(true)}
-          onBlur={() => setFirstNameFocus(false)}
         />
 
         <AutoFillAwareTextField
           label="Last Name"
           variant="outlined"
           size="small"
-          onChange={(value) => setLastName(value)}
+          onChange={(e) => setLastName(e.target.value)}
           value={lastName}
           required
           error={!validLastName && Boolean(lastName)}
           helperText={
-            lastNameFocus &&
             lastName &&
             !validLastName && (
               <span>Last Name must be at least 2 letters long.</span>
             )
           }
-          onFocus={() => setLastNameFocus(true)}
-          onBlur={() => setLastNameFocus(false)}
         />
 
         <AutoFillAwareTextField
           label="Company Name"
           variant="outlined"
           size="small"
-          onChange={(value) => setCompanyName(value)}
+          onChange={(e) => setCompanyName(e.target.value)}
           value={companyName}
           required
           error={!validCompanyName && Boolean(companyName)}
           helperText={
-            companyNameFocus &&
             companyName &&
             !validCompanyName && (
               <span>Company Name must be at least 2 letters long.</span>
             )
           }
-          onFocus={() => setCompanyNameFocus(true)}
-          onBlur={() => setCompanyNameFocus(false)}
         />
 
         <AutoFillAwareTextField
           label="Address"
           variant="outlined"
           size="small"
-          onChange={(value) => setAddress(value)}
+          onChange={(e) => setAddress(e.target.value)}
           value={address}
           required
         />
@@ -251,23 +328,13 @@ const UserInformation = () => {
           label="Phone Number"
           variant="outlined"
           size="small"
-          onChange={(value) => setPhoneNumber(value)}
+          onChange={(e) => setPhoneNumber(e.target.value)}
           value={phoneNumber}
           error={!validPhoneNumber && Boolean(phoneNumber)}
           helperText={
-            phoneFocus &&
             phoneNumber &&
             !validPhoneNumber && <span>Not a valid Phone Number.</span>
           }
-          onFocus={() => setPhoneFocus(true)}
-          onBlur={() => setPhoneFocus(false)}
-        />
-
-        <TextField
-          label="Occupation"
-          placeholder="Please insert occupation"
-          variant="outlined"
-          fullWidth
         />
 
         <Box sx={{ display: "flex", justifyContent: "space-between", mt: 3 }}>
@@ -276,14 +343,14 @@ const UserInformation = () => {
             variant="contained"
             color="primary"
             disabled={loading}
-            startIcon={loading && <CircularProgress size={24} />}
+            startIcon={loading ? <CircularProgress size={24} /> : null}
           >
             Update Information
           </Button>
           <Button
             variant="outlined"
             color="error"
-            onClick={() => navigate("/delete-account")}
+            onClick={handleDeleteAccount}
           >
             Delete Account
           </Button>

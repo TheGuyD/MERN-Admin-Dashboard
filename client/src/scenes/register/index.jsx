@@ -20,8 +20,13 @@ import {
   NAME_REGEX,
 } from "helpers/validations";
 import { useSignupMutation } from "state/authApi";
+import {
+  useCreateUserFolderStructureMutation,
+  useUploadPhotoMutation,
+} from "state/dataManagementApi";
 import ImageWithTransparentBG from "assets/parkerai.png";
 import AutoFillAwareTextField from "components/AutoFillAwareTextField";
+import ImagePicker from "components/ImagePicker"; 
 
 const Register = () => {
   const userRef = useRef();
@@ -67,8 +72,12 @@ const Register = () => {
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const [signup] = useSignupMutation();
+  const [avatar, setAvatar] = useState(null); 
 
+  const [signup] = useSignupMutation();
+  const [createUserFolderStructure] = useCreateUserFolderStructureMutation();
+  const [uploadPhoto] = useUploadPhotoMutation();
+  
   useEffect(() => {
     userRef.current.focus();
   }, []);
@@ -116,6 +125,21 @@ const Register = () => {
     phoneNumber,
   ]);
 
+  const handleImageChange = (file) => {
+    // Specify the new file name
+    const newFileName = `profile.${file.name.split(".").pop()}`; // This will keep the original file extension
+  
+    // Create a new File object with the desired name
+    const renamedFile = new File([file], newFileName, {
+      type: file.type,
+      lastModified: file.lastModified,
+    });
+  
+    console.log("renamedFile: ", renamedFile);
+  
+    // Set the renamed file to the avatar state
+    setAvatar(renamedFile);
+  };
   const handleSubmit = async (e) => {
     e.preventDefault();
     const v1 = USER_REGEX.test(userName);
@@ -140,6 +164,8 @@ const Register = () => {
       console.log("companyName: ", companyName);
       console.log("address: ", address);
       console.log("phoneNumber: ", phoneNumber);
+      console.log("avatar: ", avatar);
+
       const response = await signup({
         username: userName,
         password: pwd,
@@ -150,8 +176,22 @@ const Register = () => {
         address,
         phoneNumber,
       }).unwrap();
+      const responseCreateUserFolderStructure = await createUserFolderStructure(
+        response
+      ).unwrap();
 
-      console.log("response: ", response);
+      if (avatar) {
+        try {
+          await uploadPhoto({
+            image: avatar,
+            path: `${response.userId}/userinformation`,
+          });
+        } catch (error) {
+          console.error("Error uploading avatar:", error);
+          // Handle the error appropriately
+        }
+      }
+
       setSuccess(true);
       setUserName("");
       setPwd("");
@@ -161,6 +201,7 @@ const Register = () => {
       setCompanyName("");
       setAddress("");
       setPhoneNumber("");
+      setAvatar(null);
     } catch (err) {
       if (!err?.status) {
         setErrMsg("No Server Response");
@@ -203,13 +244,13 @@ const Register = () => {
               paddingLeft: 4,
               borderRadius: 3,
               backgroundColor: "white",
-              width: "70%", // Keep the width as before
+              width: "70%",
               marginTop: "auto",
               marginBottom: "auto",
               "&:hover": {
-                boxShadow: "0px 10px 30px rgba(0, 0, 0, 0.5)", // More pronounced and farther shadow effect on hover
-                transform: "translateY(-10px)", // More noticeable upward movement
-                backgroundColor: "#f0f0f0", // Optional: slightly different background on hover
+                boxShadow: "0px 10px 30px rgba(0, 0, 0, 0.5)",
+                transform: "translateY(-10px)",
+                backgroundColor: "#f0f0f0",
               },
             }}
           >
@@ -219,15 +260,15 @@ const Register = () => {
               sx={{
                 display: "flex",
                 flexDirection: "column",
-                gap: 2, // Set gap to add some space between each TextField
+                gap: 2,
                 width: "70%",
               }}
             >
               <Typography
-                variant="h3" // Smaller variant to reduce height
+                variant="h3"
                 color={theme.palette.secondary[600]}
-                marginTop={1} // Smaller top margin
-                marginBottom={1} // Smaller bottom margin
+                marginTop={1}
+                marginBottom={1}
               >
                 Register
               </Typography>
@@ -240,10 +281,22 @@ const Register = () => {
                 {errMsg}
               </Typography>
 
+              {/* Centered Image Picker */}
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <ImagePicker onImageChange={handleImageChange} />
+              </Box>
+
               <AutoFillAwareTextField
+                isLogin={true}
                 label="Username"
                 variant="outlined"
-                size="small" // Reduce size to make the text field smaller
+                size="small"
                 inputRef={userRef}
                 autoComplete="off"
                 onChange={(value) => setUserName(value)}
@@ -265,9 +318,10 @@ const Register = () => {
               />
 
               <AutoFillAwareTextField
+                isLogin={true}
                 label="Email"
                 variant="outlined"
-                size="small" // Reduce size to make the text field smaller
+                size="small"
                 onChange={(value) => setEmail(value)}
                 value={email}
                 required
@@ -282,9 +336,10 @@ const Register = () => {
               />
 
               <AutoFillAwareTextField
+                isLogin={true}
                 label="Password"
                 variant="outlined"
-                size="small" // Reduce size to make the text field smaller
+                size="small"
                 type={showPassword ? "text" : "password"}
                 onChange={(value) => setPwd(value)}
                 value={pwd}
@@ -318,16 +373,17 @@ const Register = () => {
                   ),
                   sx: {
                     "&.Mui-focused .MuiIconButton-root": {
-                      color: theme.palette.secondary[600], // Change the IconButton color when TextField is focused
+                      color: theme.palette.secondary[600],
                     },
                   },
                 }}
               />
 
               <AutoFillAwareTextField
+                isLogin={true}
                 label="Confirm Password"
                 variant="outlined"
-                size="small" // Reduce size to make the text field smaller
+                size="small"
                 type={showConfirmPassword ? "text" : "password"}
                 onChange={(value) => setMatchPwd(value)}
                 value={matchPwd}
@@ -363,16 +419,17 @@ const Register = () => {
                   ),
                   sx: {
                     "&.Mui-focused .MuiIconButton-root": {
-                      color: theme.palette.secondary[600], // Change the IconButton color when TextField is focused
+                      color: theme.palette.secondary[600],
                     },
                   },
                 }}
               />
 
               <AutoFillAwareTextField
+                isLogin={true}
                 label="First Name"
                 variant="outlined"
-                size="small" // Reduce size to make the text field smaller
+                size="small"
                 onChange={(value) => setFirstName(value)}
                 value={firstName}
                 required
@@ -389,9 +446,10 @@ const Register = () => {
               />
 
               <AutoFillAwareTextField
+                isLogin={true}
                 label="Last Name"
                 variant="outlined"
-                size="small" // Reduce size to make the text field smaller
+                size="small"
                 onChange={(value) => setLastName(value)}
                 value={lastName}
                 required
@@ -408,9 +466,10 @@ const Register = () => {
               />
 
               <AutoFillAwareTextField
+                isLogin={true}
                 label="Company Name"
                 variant="outlined"
-                size="small" // Reduce size to make the text field smaller
+                size="small"
                 onChange={(value) => setCompanyName(value)}
                 value={companyName}
                 required
@@ -427,18 +486,20 @@ const Register = () => {
               />
 
               <AutoFillAwareTextField
+                isLogin={true}
                 label="Address"
                 variant="outlined"
-                size="small" // Reduce size to make the text field smaller
+                size="small"
                 onChange={(value) => setAddress(value)}
                 value={address}
                 required
               />
 
               <AutoFillAwareTextField
+                isLogin={true}
                 label="Phone Number"
                 variant="outlined"
-                size="small" // Reduce size to make the text field smaller
+                size="small"
                 onChange={(value) => setPhoneNumber(value)}
                 value={phoneNumber}
                 error={!validPhoneNumber && Boolean(phoneNumber)}
@@ -455,22 +516,12 @@ const Register = () => {
                 type="submit"
                 variant="contained"
                 color="primary"
-                disabled={
-                  // !validUserName ||
-                  // !validPwd ||
-                  // !validMatch ||
-                  // !validEmail ||
-                  // !validFirstName ||
-                  // !validLastName ||
-                  loading
-                }
+                disabled={loading}
                 startIcon={loading && <CircularProgress size={24} />}
               >
                 Sign Up
               </Button>
               <Box marginBottom={2}>
-                {" "}
-                {/* Reduce bottom margin */}
                 <Typography variant="body2" sx={{ mt: 1 }} color="primary">
                   Already registered?
                   <Link to="/login"> Sign In</Link>
@@ -478,13 +529,12 @@ const Register = () => {
               </Box>
             </Box>
 
-            {/* Image on the right side but moved to the bottom */}
             <Box
               sx={{
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
-                justifyContent: "flex-end", // Move the image to the bottom
+                justifyContent: "flex-end",
                 width: "30%",
               }}
             >

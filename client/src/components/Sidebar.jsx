@@ -17,7 +17,6 @@ import {
   ChevronLeft,
   ChevronRightOutlined,
   HomeOutlined,
-  ShoppingCartOutlined,
   Groups2Outlined,
   ReceiptLongOutlined,
   PublicOutlined,
@@ -28,6 +27,7 @@ import {
   PieChartOutlined,
   CalendarMonthOutlined,
 } from "@mui/icons-material";
+import LocalParkingIcon from "@mui/icons-material/LocalParking";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import FlexBetween from "./FlexBetween";
@@ -43,8 +43,8 @@ const navItems = [
     icon: null,
   },
   {
-    text: "Products",
-    icon: <ShoppingCartOutlined />,
+    text: "My Parking Lots",
+    icon: <LocalParkingIcon />,
   },
   {
     text: "Customers",
@@ -94,20 +94,23 @@ const navItems = [
 
 const Sidebar = ({
   user,
+  profileImageUrl,
   drawerWidth,
   isSidebarOpen,
   setIsSidebarOpen,
   isNonMobile,
 }) => {
-  console.log("🚀 ~ user:", user)
-
   const { pathname } = useLocation();
   const [active, setActive] = useState("");
   const navigate = useNavigate();
   const theme = useTheme();
 
   useEffect(() => {
-    setActive(pathname.substring(1));
+    const formattedPathname = pathname
+      .substring(1)
+      .toLowerCase()
+      .replace(/ /g, "-");
+    setActive(formattedPathname);
   }, [pathname]);
   return (
     <Box component="nav">
@@ -158,16 +161,17 @@ const Sidebar = ({
                   <ListItem key={text} disablePadding>
                     <ListItemButton
                       onClick={() => {
-                        navigate(`/${lcText}`);
-                        setActive(lcText);
+                        const formattedText = lcText.replace(/ /g, "-"); // Replace spaces with hyphens if your path uses hyphens
+                        navigate(`/${formattedText}`);
+                        setActive(formattedText);
                       }}
                       sx={{
                         backgroundColor:
-                          active === lcText
+                          active === lcText.replace(/ /g, "-") // Compare the formatted value
                             ? theme.palette.secondary[300]
                             : "transparent",
                         color:
-                          active === lcText
+                          active === lcText.replace(/ /g, "-")
                             ? theme.palette.primary[600]
                             : theme.palette.secondary[100],
                       }}
@@ -176,7 +180,7 @@ const Sidebar = ({
                         sx={{
                           ml: "2rem",
                           color:
-                            active === lcText
+                            active === lcText.replace(/ /g, "-")
                               ? theme.palette.primary[600]
                               : theme.palette.secondary[200],
                         }}
@@ -184,7 +188,7 @@ const Sidebar = ({
                         {icon}
                       </ListItemIcon>
                       <ListItemText primary={text} />
-                      {active === lcText && (
+                      {active === lcText.replace(/ /g, "-") && (
                         <ChevronRightOutlined sx={{ ml: "auto" }} />
                       )}
                     </ListItemButton>
@@ -204,7 +208,7 @@ const Sidebar = ({
               <Box
                 component="img"
                 alt="profile"
-                src={profileImage}
+                src={profileImageUrl || profileImage}
                 height="40px"
                 width="40px"
                 borderRadius="50%"
@@ -216,7 +220,7 @@ const Sidebar = ({
                   fontSize="0.9rem"
                   sx={{ color: theme.palette.secondary[100] }}
                 >
-                  {user.firstName + ' ' + user.lastName}
+                  {user.firstName + " " + user.lastName}
                 </Typography>
                 {/* <Typography
                   fontSize="0.8rem"

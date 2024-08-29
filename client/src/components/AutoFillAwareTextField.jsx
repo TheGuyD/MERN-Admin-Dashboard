@@ -1,14 +1,20 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { TextField, useTheme } from "@mui/material";
 
 const AutoFillAwareTextField = ({
+  isLogin = false,
   onChange,
+  value,
   inputProps,
   InputLabelProps,
   ...rest
 }) => {
-  const [fieldHasValue, setFieldHasValue] = useState(false);
+  const [fieldHasValue, setFieldHasValue] = useState(value !== "");
   const theme = useTheme();
+
+  useEffect(() => {
+    setFieldHasValue(value !== "");
+  }, [value]);
 
   const makeAnimationStartHandler = (stateSetter) => (e) => {
     const autofilled = !!e.target?.matches("*:-webkit-autofill");
@@ -16,7 +22,7 @@ const AutoFillAwareTextField = ({
       e.animationName === "mui-auto-fill" ||
       e.animationName === "mui-auto-fill-cancel"
     ) {
-      stateSetter(autofilled);
+      stateSetter(autofilled || e.target.value !== "");
     }
   };
 
@@ -39,33 +45,36 @@ const AutoFillAwareTextField = ({
         ...InputLabelProps,
       }}
       onChange={_onChange}
+      value={value}
       {...rest}
       sx={{
         "& .MuiInputLabel-root": {
-          fontWeight: "normal", // Remove bold font
-          fontSize: "0.8rem", // Default hint size
-          color: theme.palette.primary[600], // Set placeholder text color
-          opacity: 0.6, // Set opacity for the label
+          fontWeight: "bold",
+          fontSize: "0.9rem",
+          color: isLogin
+            ? theme.palette.primary[600]
+            : theme.palette.secondary[100],
+          opacity: 0.6,
           "&.Mui-focused": {
-            fontSize: "0.8rem", // Font size when focused/shrinked
-            opacity: 1, // Full opacity when focused
+            fontSize: "0.8rem",
+            opacity: 1,
             color: theme.palette.secondary[600],
           },
         },
         "& .MuiOutlinedInput-root": {
           "& fieldset": {
-            borderColor: "rgba(0, 0, 0, 0.23)",
+            borderColor: theme.palette.primary[300],
           },
           "&:hover fieldset": {
-            borderColor: "rgba(0, 0, 0, 0.87)",
+            borderColor: theme.palette.secondary[300],
           },
           "&.Mui-focused fieldset": {
             borderColor: theme.palette.secondary[600],
           },
         },
         "& .MuiInputBase-input": {
-          backgroundColor: "white !important",
-          color: "#000000 !important",
+          // backgroundColor: "white !important",
+          color: theme.palette.secondary[600],
           caretColor: "#000000 !important",
           "&::placeholder": {
             color: theme.palette.secondary[600],
@@ -77,7 +86,7 @@ const AutoFillAwareTextField = ({
           },
           "&:-webkit-autofill": {
             WebkitBoxShadow: "0 0 0px 1000px white inset !important",
-            WebkitTextFillColor: "#000000 !important", // Use camelCase here
+            WebkitTextFillColor: "#000000 !important",
           },
         },
       }}

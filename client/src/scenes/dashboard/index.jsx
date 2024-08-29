@@ -25,7 +25,6 @@ const Dashboard = () => {
   const theme = useTheme();
   const isNonMediumScreens = useMediaQuery("(min-width:1200px)");
   const { data, isLoading } = useGetDashboardQuery();
-  console.log("🚀 ~ Dashboard ~ data:", data);
 
   const columns = [
     { field: "_id", headerName: "ID", flex: 1 },

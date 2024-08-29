@@ -18,7 +18,6 @@ import { useLoginMutation } from "state/authApi";
 import ImageWithTransparentBG from "assets/ParkerAi-login.png";
 import AutoFillAwareTextField from "components/AutoFillAwareTextField";
 
-
 const Login = () => {
   const { setAuth } = useAuth();
   const theme = useTheme();
@@ -152,6 +151,7 @@ const Login = () => {
               </Typography>
 
               <AutoFillAwareTextField
+                isLogin={true}
                 label="Email"
                 variant="outlined"
                 inputRef={userRef}
@@ -170,6 +170,7 @@ const Login = () => {
               />
 
               <AutoFillAwareTextField
+                isLogin={true}
                 label="Password"
                 variant="outlined"
                 type={showPassword ? "text" : "password"}

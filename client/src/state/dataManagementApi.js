@@ -1,14 +1,16 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 export const dataManagementApi = createApi({
-  baseQuery: fetchBaseQuery({ baseUrl: "http://localhost:3000/data-management/" }),
+  baseQuery: fetchBaseQuery({
+    baseUrl: "http://localhost:3000/data-management/",
+  }),
   reducerPath: "dataManagementApi",
   tagTypes: ["Camera", "ParkingLot", "Document", "User"],
   endpoints: (build) => ({
     // Camera Endpoints
     getCameras: build.query({
       query: () => `camera/getAllCameras`, // Adjust this if there's a specific GET route
-      providesTags: ["Camera"]
+      providesTags: ["Camera"],
     }),
     addCamera: build.mutation({
       query: (newCamera) => ({
@@ -16,7 +18,7 @@ export const dataManagementApi = createApi({
         method: "POST",
         body: newCamera,
       }),
-      invalidatesTags: ["Camera"]
+      invalidatesTags: ["Camera"],
     }),
     updateCameraBlueprint: build.mutation({
       query: ({ cameraId, blueprint }) => ({
@@ -24,7 +26,7 @@ export const dataManagementApi = createApi({
         method: "POST",
         body: { cameraId, blueprint },
       }),
-      invalidatesTags: ["Camera"]
+      invalidatesTags: ["Camera"],
     }),
     removeCamera: build.mutation({
       query: (cameraId) => ({
@@ -32,13 +34,13 @@ export const dataManagementApi = createApi({
         method: "POST",
         body: { cameraId },
       }),
-      invalidatesTags: ["Camera"]
+      invalidatesTags: ["Camera"],
     }),
 
     // ParkingLot Endpoints
-    getParkingLots: build.query({
-      query: () => `parkingLot/getAllParkingLots`, // Adjust this if there's a specific GET route
-      providesTags: ["ParkingLot"]
+    getAllParkingLotsByUserId: build.query({
+      query: (userId) => `parkingLot/getAllParkingLotsByUserId/${userId}`,
+      providesTags: ["ParkingLot"],
     }),
     addParkingLot: build.mutation({
       query: (newParkingLot) => ({
@@ -46,7 +48,7 @@ export const dataManagementApi = createApi({
         method: "POST",
         body: newParkingLot,
       }),
-      invalidatesTags: ["ParkingLot"]
+      invalidatesTags: ["ParkingLot"],
     }),
     updateParkingLot: build.mutation({
       query: ({ parkingLotId, ...updatedParkingLot }) => ({
@@ -54,7 +56,7 @@ export const dataManagementApi = createApi({
         method: "POST",
         body: { parkingLotId, ...updatedParkingLot },
       }),
-      invalidatesTags: ["ParkingLot"]
+      invalidatesTags: ["ParkingLot"],
     }),
     deleteParkingLot: build.mutation({
       query: (parkingLotId) => ({
@@ -62,13 +64,13 @@ export const dataManagementApi = createApi({
         method: "POST",
         body: { parkingLotId },
       }),
-      invalidatesTags: ["ParkingLot"]
+      invalidatesTags: ["ParkingLot"],
     }),
 
     // Document Endpoints
     getDocuments: build.query({
       query: () => `document/getAllDocuments`, // Adjust this if there's a specific GET route
-      providesTags: ["Document"]
+      providesTags: ["Document"],
     }),
     addDocument: build.mutation({
       query: (newDocument) => ({
@@ -76,7 +78,7 @@ export const dataManagementApi = createApi({
         method: "POST",
         body: newDocument,
       }),
-      invalidatesTags: ["Document"]
+      invalidatesTags: ["Document"],
     }),
     updateDocument: build.mutation({
       query: ({ documentId, ...updatedDocument }) => ({
@@ -84,7 +86,7 @@ export const dataManagementApi = createApi({
         method: "POST",
         body: { documentId, ...updatedDocument },
       }),
-      invalidatesTags: ["Document"]
+      invalidatesTags: ["Document"],
     }),
     deleteDocument: build.mutation({
       query: (documentId) => ({
@@ -92,21 +94,21 @@ export const dataManagementApi = createApi({
         method: "POST",
         body: { documentId },
       }),
-      invalidatesTags: ["Document"]
+      invalidatesTags: ["Document"],
     }),
 
     // User Endpoints
     getUsers: build.query({
       query: () => `user/getAllUsers`, // Adjust this if there's a specific GET route
-      providesTags: ["User"]
+      providesTags: ["User"],
     }),
     updateUser: build.mutation({
-      query: ({ userId, ...updatedUser }) => ({
+      query: ({ ...updatedUser }) => ({
         url: `user/updateUser`,
         method: "POST",
-        body: { userId, ...updatedUser },
+        body: { ...updatedUser },
       }),
-      invalidatesTags: ["User"]
+      invalidatesTags: ["User"],
     }),
     deleteUser: build.mutation({
       query: (userId) => ({
@@ -114,24 +116,66 @@ export const dataManagementApi = createApi({
         method: "POST",
         body: { userId },
       }),
-      invalidatesTags: ["User"]
-
+      invalidatesTags: ["User"],
     }),
     getUserInformation: build.query({
-        query: (userId) => ({
-          url: `user/getUserInformation/${userId}`,
-          method: "GET",
-        }),
-        providesTags: ["User"]
+      query: (userId) => ({
+        url: `user/getUserInformation/${userId}`,
+        method: "GET",
+      }),
+      providesTags: ["User"],
     }),
+    createUserFolderStructure: build.mutation({
+      query: (userId) => ({
+        url: `user/createUserFolderStructure`,
+        method: `POST`,
+        body: userId,
+      }),
+      providesTags: ["User"],
+    }),
+    uploadPhoto: build.mutation({
+      query: ({ image, path }) => {
+
+        const formData = new FormData();
+        formData.append("image", image);
+        formData.append("path", path);
+
+        return {
+          url: `user/uploadPhoto`,
+          method: "POST",
+          body: formData,
+        };
+      },
+    }),
+    retriveImage: build.query({
+      query: ({ imageName, path }) => ({
+        url: `user/retriveImage`,
+        method: "POST",
+        body: { imageName, requestedPath: path },
+      }),
+    }),
+
   }),
 });
 
-
-
 export const {
-  useGetCamerasQuery, useAddCameraMutation, useUpdateCameraBlueprintMutation, useRemoveCameraMutation,
-  useGetParkingLotsQuery, useAddParkingLotMutation, useUpdateParkingLotMutation, useDeleteParkingLotMutation,
-  useGetDocumentsQuery, useAddDocumentMutation, useUpdateDocumentMutation, useDeleteDocumentMutation,
-  useGetUsersQuery, useUpdateUserMutation, useDeleteUserMutation, useGetUserInformationQuery
+  useGetCamerasQuery,
+  useAddCameraMutation,
+  useUpdateCameraBlueprintMutation,
+  useRemoveCameraMutation,
+  useGetAllParkingLotsByUserIdQuery,
+  useAddParkingLotMutation,
+  useUpdateParkingLotMutation,
+  useDeleteParkingLotMutation,
+  useGetDocumentsQuery,
+  useAddDocumentMutation,
+  useUpdateDocumentMutation,
+  useDeleteDocumentMutation,
+  useGetUsersQuery,
+  useUpdateUserMutation,
+  useDeleteUserMutation,
+  useGetUserInformationQuery,
+  useCreateUserFolderStructureMutation,
+  useUploadPhotoMutation,
+  useRetriveImageQuery,
 } = dataManagementApi;
