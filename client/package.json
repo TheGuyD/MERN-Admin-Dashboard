@@ -33,7 +33,7 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "cross-env PORT=3002 HOST=localhost react-scripts start",
+    "start": "cross-env PORT=3002 HOST=localhost NODE_OPTIONS=--dns-result-order=ipv4first react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"

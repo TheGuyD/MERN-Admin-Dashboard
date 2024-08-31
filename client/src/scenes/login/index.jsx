@@ -17,7 +17,7 @@ import useAuth from "hooks/useAuth";
 import { useLoginMutation } from "state/authApi";
 import ImageWithTransparentBG from "assets/ParkerAi-login.png";
 import AutoFillAwareTextField from "components/AutoFillAwareTextField";
-import {useRetriveImageQuery} from "state/dataManagementApi";
+import { useRetriveImageQuery } from "state/dataManagementApi";
 import { useDispatch } from "react-redux";
 import { setProfileImage } from "state/authSlice";
 const Login = () => {
@@ -44,6 +44,7 @@ const Login = () => {
   const [success, setSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false); // Track if the image is loaded
 
   const [login] = useLoginMutation();
   const [queryParams, setQueryParams] = useState(null); // State to hold the query parameters
@@ -70,7 +71,9 @@ const Login = () => {
 
   useEffect(() => {
     if (imageData?.downloadURL) {
+      console.log("Profile image URL:", imageData.downloadURL);
       dispatch(setProfileImage(imageData.downloadURL));
+      setImageLoaded(true); // Indicate that the image has been loaded
     }
   }, [imageData, dispatch]);
 
@@ -89,18 +92,25 @@ const Login = () => {
         password: pwd,
       }).unwrap();
 
-      setAuth({ ...response });
+      if (response && response.userId) {
+        setAuth({ ...response });
 
-      // Set query parameters after successful login
-      setQueryParams({
-        imageName: "profile.png",
-        path: `${response.userId}/userinformation`,
-      });
+        setQueryParams({
+          imageName: "profile.png",
+          path: `${response.userId}/userinformation`,
+        });
+        // after user and response are ready TODO: FIX ANNOTIATION LATER
+        //dispatch(setProfileImage(imageData.downloadURL));
+        console.log("Login successful:", response);
+      } else {
+        console.error("Login response is missing userId");
+        setErrMsg("Invalid response from server");
+        return;
+      }
 
       setSuccess(true);
       setEmail("");
       setPwd("");
-      navigate(from, { replace: true });
     } catch (err) {
       let errorMsg = "Login Failed";
       if (!err?.status) {
@@ -118,9 +128,15 @@ const Login = () => {
     }
   };
 
+  useEffect(() => {
+    if (success && imageLoaded) {
+      navigate("/dashboard"); // Navigate only after the image has been loaded
+    }
+  }, [success, imageLoaded, navigate]);
+
   return (
     <>
-      {success ? (
+      {success && imageLoaded ? (
         <Navigate to="/dashboard" />
       ) : (
         <Container

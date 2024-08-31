@@ -27,7 +27,7 @@ import {
 import { useNavigate } from "react-router-dom"; // Import useNavigate for navigation
 import { useLogoutMutation } from "state/authApi"; // Adjust the import path as necessary
 
-const Navbar = ({ profileImageUrl , user, isSidebarOpen, setIsSidebarOpen }) => {
+const Navbar = ({ profileImageUrl, user, isSidebarOpen, setIsSidebarOpen }) => {
   const dispatch = useDispatch();
   const theme = useTheme();
   const navigate = useNavigate(); // Initialize useNavigate for navigation
@@ -44,6 +44,7 @@ const Navbar = ({ profileImageUrl , user, isSidebarOpen, setIsSidebarOpen }) => 
       dispatch(logout());
       // Optionally, redirect to the login page or any other page
       // window.location.href = '/login';
+      navigate("/login");
     } catch (error) {
       console.error("Failed to logout:", error);
     } finally {
@@ -106,7 +107,7 @@ const Navbar = ({ profileImageUrl , user, isSidebarOpen, setIsSidebarOpen }) => 
                 gap: "1rem",
               }}
             >
-             <Box
+              <Box
                 component="img"
                 alt="profile"
                 src={profileImageUrl || profileImage} // Use profileImageUrl passed from Layout
