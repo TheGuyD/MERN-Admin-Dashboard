@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect } from "react";
+import { useDispatch } from "react-redux";
 import {
   Button,
   Typography,
@@ -26,12 +27,14 @@ import {
 } from "state/dataManagementApi";
 import ImageWithTransparentBG from "assets/parkerai.png";
 import AutoFillAwareTextField from "components/AutoFillAwareTextField";
-import ImagePicker from "components/ImagePicker"; 
+import ImagePicker from "components/ImagePicker";
+import { setProfileImage } from "state/authSlice";
 
 const Register = () => {
   const userRef = useRef();
   const errRef = useRef();
   const theme = useTheme();
+  const dispatch = useDispatch();
 
   const [userName, setUserName] = useState("");
   const [validUserName, setValidUserName] = useState(false);
@@ -72,12 +75,12 @@ const Register = () => {
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const [avatar, setAvatar] = useState(null); 
+  const [avatar, setAvatar] = useState(null);
 
   const [signup] = useSignupMutation();
   const [createUserFolderStructure] = useCreateUserFolderStructureMutation();
   const [uploadPhoto] = useUploadPhotoMutation();
-  
+
   useEffect(() => {
     userRef.current.focus();
   }, []);
@@ -128,15 +131,15 @@ const Register = () => {
   const handleImageChange = (file) => {
     // Specify the new file name
     const newFileName = `profile.${file.name.split(".").pop()}`; // This will keep the original file extension
-  
+
     // Create a new File object with the desired name
     const renamedFile = new File([file], newFileName, {
       type: file.type,
       lastModified: file.lastModified,
     });
-  
+
     console.log("renamedFile: ", renamedFile);
-  
+
     // Set the renamed file to the avatar state
     setAvatar(renamedFile);
   };
@@ -182,10 +185,15 @@ const Register = () => {
 
       if (avatar) {
         try {
-          await uploadPhoto({
+          const uploadResponse = await uploadPhoto({
             image: avatar,
             path: `${response.userId}/userinformation`,
           });
+
+          // Update the global state with the new profile image URL
+          if (uploadResponse?.data.downloadURL) {
+            dispatch(setProfileImage(uploadResponse.data.downloadURL));
+          }
         } catch (error) {
           console.error("Error uploading avatar:", error);
           // Handle the error appropriately

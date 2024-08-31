@@ -1,12 +1,13 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
   userId: null,
   accessToken: null,
+  profileImage: null,
 };
 
 const authSlice = createSlice({
-  name: 'auth',
+  name: "auth",
   initialState,
   reducers: {
     setAuth: (state, action) => {
@@ -17,10 +18,15 @@ const authSlice = createSlice({
     logout: (state) => {
       state.userId = null;
       state.accessToken = null;
+      state.profileImage = null;
+    },
+    //TODO: what will be more convinient, to save all user information in this slice , modeSlice or start new infoemationSlice?
+    setProfileImage: (state, action) => {
+      state.profileImage = action.payload;
     },
   },
 });
 
-export const { setAuth, logout } = authSlice.actions;
+export const { setAuth, logout, setProfileImage } = authSlice.actions;
 
 export default authSlice.reducer;

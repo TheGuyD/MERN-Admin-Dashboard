@@ -17,11 +17,14 @@ import useAuth from "hooks/useAuth";
 import { useLoginMutation } from "state/authApi";
 import ImageWithTransparentBG from "assets/ParkerAi-login.png";
 import AutoFillAwareTextField from "components/AutoFillAwareTextField";
-
+import {useRetriveImageQuery} from "state/dataManagementApi";
+import { useDispatch } from "react-redux";
+import { setProfileImage } from "state/authSlice";
 const Login = () => {
   const { setAuth } = useAuth();
   const theme = useTheme();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const location = useLocation();
   const from = location.state?.from?.pathname || "/dashboard";
 
@@ -43,6 +46,11 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
 
   const [login] = useLoginMutation();
+  const [queryParams, setQueryParams] = useState(null); // State to hold the query parameters
+
+  const { data: imageData } = useRetriveImageQuery(queryParams, {
+    skip: !queryParams, // Skip the query initially until we have the query parameters
+  });
 
   useEffect(() => {
     userRef.current.focus();
@@ -60,6 +68,12 @@ const Login = () => {
     setErrMsg("");
   }, [pwd, email]);
 
+  useEffect(() => {
+    if (imageData?.downloadURL) {
+      dispatch(setProfileImage(imageData.downloadURL));
+    }
+  }, [imageData, dispatch]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const v1 = PWD_REGEX.test(pwd);
@@ -74,7 +88,15 @@ const Login = () => {
         email,
         password: pwd,
       }).unwrap();
+
       setAuth({ ...response });
+
+      // Set query parameters after successful login
+      setQueryParams({
+        imageName: "profile.png",
+        path: `${response.userId}/userinformation`,
+      });
+
       setSuccess(true);
       setEmail("");
       setPwd("");

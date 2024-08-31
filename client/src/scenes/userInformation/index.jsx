@@ -8,6 +8,7 @@ import {
   useTheme,
 } from "@mui/material";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import AutoFillAwareTextField from "components/AutoFillAwareTextField";
 import {
   USER_REGEX,
@@ -23,11 +24,13 @@ import {
 } from "state/dataManagementApi";
 import Header from "components/Header";
 import ImagePicker from "components/ImagePicker";
+import { setProfileImage } from "state/authSlice";
 
 const UserInformation = () => {
   const location = useLocation();
   const user = location.state?.user;
   const theme = useTheme();
+  const dispatch = useDispatch();
   const navigate = useNavigate();
 
   // State hooks for form fields
@@ -49,7 +52,6 @@ const UserInformation = () => {
   const [loading, setLoading] = useState(false);
   const [avatar, setAvatar] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null); // For uploading the file
-
 
   // Retrieve the user's current profile image
   const { data: imageData } = useRetriveImageQuery({
@@ -129,14 +131,17 @@ const UserInformation = () => {
 
       // If a new avatar is selected, upload it
       if (selectedFile) {
-        await uploadImage({
+        const uploadResponse = await uploadImage({
           image: selectedFile,
           path: `${user._id}/userinformation`,
         });
+        
+        // Update the global state with the new profile image URL
+        if (uploadResponse?.data.downloadURL) {
+          console.log("🚀 ~ handleSubmit ~ uploadResponse?.data.downloadURL:", uploadResponse?.data.downloadURL)
+          dispatch(setProfileImage(uploadResponse?.data.downloadURL));
+        }
       }
-
-      // Optionally, navigate to another page after the update
-      // navigate("/dashboard");
     } catch (err) {
       console.error("Failed to update user information", err);
       setErrMsg("Update failed");
@@ -165,19 +170,17 @@ const UserInformation = () => {
       type: file.type,
       lastModified: file.lastModified,
     });
-  
+
     // Create a FileReader to read the file and convert it to a data URL
     const reader = new FileReader();
     reader.onloadend = () => {
       setAvatar(reader.result); // Set the data URL as the avatar image for immediate display
     };
     reader.readAsDataURL(renamedFile);
-  
+
     // Store the file for later upload
     setSelectedFile(renamedFile);
   };
-
-
 
   return (
     <Container
