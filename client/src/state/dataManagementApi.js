@@ -67,6 +67,15 @@ export const dataManagementApi = createApi({
       invalidatesTags: ["ParkingLot"],
     }),
 
+    createParkingLotFolderStructure: build.mutation({
+      query: (userId, parkingLotId) => ({
+        url: `parkingLot/createParkingLotFolderStructure`,
+        method: "POST",
+        body: { userId, parkingLotId },
+      }),
+      invalidatesTags: ["ParkingLot"],
+    }),
+
     // Document Endpoints
     getDocuments: build.query({
       query: () => `document/getAllDocuments`, // Adjust this if there's a specific GET route
@@ -135,7 +144,6 @@ export const dataManagementApi = createApi({
     }),
     uploadPhoto: build.mutation({
       query: ({ image, path }) => {
-
         const formData = new FormData();
         formData.append("image", image);
         formData.append("path", path);
@@ -154,7 +162,6 @@ export const dataManagementApi = createApi({
         body: { imageName, requestedPath: path },
       }),
     }),
-
   }),
 });
 
@@ -178,4 +185,5 @@ export const {
   useCreateUserFolderStructureMutation,
   useUploadPhotoMutation,
   useRetriveImageQuery,
+  useCreateParkingLotFolderStructureMutation,
 } = dataManagementApi;
