@@ -19,6 +19,8 @@ import {
   useAddParkingLotMutation,
   useGetAllParkingLotsByUserIdQuery,
   useCreateUserFolderStructureMutation, // Import the hook
+  useUploadPhotoMutation,
+  useRetriveImageQuery,
 } from "state/dataManagementApi";
 import { useSelector } from "react-redux";
 
@@ -35,6 +37,16 @@ const ParkingLotCard = ({
   handleExpandClick,
 }) => {
   const theme = useTheme();
+  const { userId } = useSelector((state) => state.auth);
+
+  // Fetch the profile image for the parking lot
+  const { data: imageData, error } = useRetriveImageQuery({
+    imageName: "profile.png",
+    path: `${userId}/myparkinglots/${_id}`,
+  });
+
+  // Determine the image to display
+  const imageUrl = imageData?.downloadURL || placeHolderImage;
 
   return (
     <Card
@@ -51,8 +63,8 @@ const ParkingLotCard = ({
         <CardMedia
           component="img"
           height="140"
-          image={placeHolderImage}
-          alt="placeHolder"
+          image={imageUrl} // Use the fetched image URL or placeholder
+          alt={parkingLotName}
         />
         <CardContent>
           <Typography
@@ -113,21 +125,21 @@ const MyParkingLots = () => {
   const [createUserFolderStructure] = useCreateUserFolderStructureMutation(); // Initialize the mutation hook
   const userId = useSelector((state) => state.auth.userId);
   const { data, isLoading } = useGetAllParkingLotsByUserIdQuery(userId);
-
+  const [uploadImage] = useUploadPhotoMutation(); // Initialize the upload mutation hook
   const isNonMobile = useMediaQuery("(min-width:1000px)");
 
-  useEffect(() => {
-    const createUserFolder = async () => {
-      try {
-        const response = await createUserFolderStructure({ userId }).unwrap();
-        console.log("Folder structure created:", response);
-      } catch (err) {
-        console.error("Failed to create folder structure:", err);
-      }
-    };
+  // useEffect(() => {
+  //   const createUserFolder = async () => {
+  //     try {
+  //       const response = await createUserFolderStructure({ userId }).unwrap();
+  //       console.log("Folder structure created:", response);
+  //     } catch (err) {
+  //       console.error("Failed to create folder structure:", err);
+  //     }
+  //   };
 
-    createUserFolder(); // Trigger the API call when the component mounts
-  }, [createUserFolderStructure, userId]);
+  //   createUserFolder(); // Trigger the API call when the component mounts
+  // }, [createUserFolderStructure, userId]);
 
   const handleOpen = () => {
     setOpen(true);
@@ -143,10 +155,34 @@ const MyParkingLots = () => {
 
   const handleSubmit = async (parkingLotData) => {
     try {
-      await addParkingLot({
+      // Step 1: Add the parking lot to the database
+      const addedParkingLot = await addParkingLot({
         ownerUserId: userId,
         ...parkingLotData,
       }).unwrap();
+
+      // Use the correct key from the response
+      const parkingLotId = addedParkingLot.parkingLotId;
+
+      // Step 2: Create the folder structure in Firebase Storage
+      await createUserFolderStructure({
+        userId: userId,
+        context: "parkinglot",
+        parkingLotId: parkingLotId,
+      }).unwrap();
+
+      // Step 3: Upload the parking lot image to Firebase Storage
+      if (parkingLotData.avatar) {
+        const uploadResponse = await uploadImage({
+          image: parkingLotData.avatar,
+          path: `${userId}/myparkinglots/${parkingLotId}`,
+        });
+
+        // You can handle the download URL if needed
+        const downloadURL = uploadResponse?.data?.downloadURL;
+        console.log("Parking lot image uploaded successfully:", downloadURL);
+      }
+
       handleClose();
     } catch (err) {
       console.error("Failed to add parking lot:", err);

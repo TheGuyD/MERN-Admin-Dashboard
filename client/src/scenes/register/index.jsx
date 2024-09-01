@@ -179,9 +179,10 @@ const Register = () => {
         address,
         phoneNumber,
       }).unwrap();
-      const responseCreateUserFolderStructure = await createUserFolderStructure(
-        response
-      ).unwrap();
+      await createUserFolderStructure({
+        userId: response.userId,
+        context: "user",
+      }).unwrap();
 
       if (avatar) {
         try {

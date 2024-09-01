@@ -13,6 +13,7 @@ import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import AutoFillAwareTextField from "./AutoFillAwareTextField";
+import ImagePicker from "components/ImagePicker";
 
 const AddParkingLotDialog = ({ open, handleClose, handleSubmit }) => {
   const [parkingLotName, setParkingLotName] = useState("");
@@ -23,6 +24,14 @@ const AddParkingLotDialog = ({ open, handleClose, handleSubmit }) => {
   const [numberOfParkingSlot, setNumberOfParkingSlot] = useState("");
   const [updateInterval, setUpdateInterval] = useState("");
   const theme = useTheme();
+
+  // Added State for Image
+  const [avatar, setAvatar] = useState(null);
+
+  const handleImageChange = (file) => {
+    // Update the avatar state with the selected file
+    setAvatar(file);
+  };
 
   const isSubmitDisabled =
     !parkingLotName ||
@@ -35,6 +44,7 @@ const AddParkingLotDialog = ({ open, handleClose, handleSubmit }) => {
 
   const onSubmit = () => {
     if (!isSubmitDisabled) {
+      // Pass the avatar image along with other form data
       handleSubmit({
         parkingLotName,
         address,
@@ -45,6 +55,7 @@ const AddParkingLotDialog = ({ open, handleClose, handleSubmit }) => {
         },
         numberOfParkingSlot,
         updateInterval,
+        avatar, // Add the avatar to the submitted data
       });
       handleClose();
     }
@@ -73,6 +84,21 @@ const AddParkingLotDialog = ({ open, handleClose, handleSubmit }) => {
       >
         Add Parking Lot
       </DialogTitle>
+
+      {/* Centered Image Picker */}
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <ImagePicker
+          onImageChange={handleImageChange}
+          imageUrl={avatar && URL.createObjectURL(avatar)} // Display the selected image if available
+        />
+      </Box>
+
       <Box>
         <DialogContent sx={{ paddingTop: "1rem" }}>
           <LocalizationProvider dateAdapter={AdapterDateFns}>
