@@ -11,10 +11,14 @@ import {
   useMediaQuery,
   CardActionArea,
   CardMedia,
+  IconButton,
+  Menu,
+  MenuItem,
 } from "@mui/material";
+import MenuOpenRoundedIcon from "@mui/icons-material/MenuOpenRounded";
 import AddParkingLotDialog from "components/AddParkingLotDialog";
 import Header from "components/Header";
-import placeHolderImage from "assets/parkingLot.jpeg";
+import placeHolderImage from "assets/parkingLot.png";
 import {
   useAddParkingLotMutation,
   useGetAllParkingLotsByUserIdQuery,
@@ -23,6 +27,7 @@ import {
   useRetriveImageQuery,
 } from "state/dataManagementApi";
 import { useSelector } from "react-redux";
+import FlexBetween from "components/FlexBetween";
 
 const ParkingLotCard = ({
   _id,
@@ -48,6 +53,28 @@ const ParkingLotCard = ({
   // Determine the image to display
   const imageUrl = imageData?.downloadURL || placeHolderImage;
 
+  // Menu state
+  const [anchorEl, setAnchorEl] = useState(null);
+  const openMenu = Boolean(anchorEl);
+
+  const handleMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleEdit = () => {
+    // Implement edit logic
+    handleMenuClose();
+  };
+
+  const handleDelete = () => {
+    // Implement delete logic
+    handleMenuClose();
+  };
+
   return (
     <Card
       sx={{
@@ -65,6 +92,7 @@ const ParkingLotCard = ({
           height="140"
           image={imageUrl} // Use the fetched image URL or placeholder
           alt={parkingLotName}
+          style={{ objectFit: "contain" }} //
         />
         <CardContent>
           <Typography
@@ -93,9 +121,22 @@ const ParkingLotCard = ({
           variant="primary"
           size="small"
           onClick={() => handleExpandClick(_id)}
+          sx={{ minWidth: "100px" }}
         >
           {isExpanded ? "See Less" : "See More"}
         </Button>
+        <FlexBetween sx={{ width: "100%" }} />
+        <IconButton
+          aria-label="settings"
+          onClick={handleMenuOpen}
+          sx={{ ml: "auto" }}
+        >
+          <MenuOpenRoundedIcon />
+        </IconButton>
+        <Menu anchorEl={anchorEl} open={openMenu} onClose={handleMenuClose}>
+          <MenuItem onClick={handleEdit}>Edit</MenuItem>
+          <MenuItem onClick={handleDelete}>Delete</MenuItem>
+        </Menu>
       </CardActions>
       <Collapse in={isExpanded} timeout="auto" unmountOnExit>
         <CardContent>
