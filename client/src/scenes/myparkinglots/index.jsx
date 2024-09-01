@@ -44,14 +44,34 @@ const ParkingLotCard = ({
   const theme = useTheme();
   const { userId } = useSelector((state) => state.auth);
 
+  const [retryAttempt, setRetryAttempt] = useState(0);
+  const maxRetries = 3; // You can adjust this as needed
+
   // Fetch the profile image for the parking lot
-  const { data: imageData, error } = useRetriveImageQuery({
+  const {
+    data: imageData,
+    error,
+    refetch,
+  } = useRetriveImageQuery({
     imageName: "profile.png",
     path: `${userId}/myparkinglots/${_id}`,
   });
 
   // Determine the image to display
   const imageUrl = imageData?.downloadURL || placeHolderImage;
+
+  // Effect to handle retry logic
+  useEffect(() => {
+    if (error && retryAttempt < maxRetries) {
+      const timer = setTimeout(() => {
+        console.log(`Retrying image retrieval... Attempt ${retryAttempt + 1}`);
+        setRetryAttempt((prev) => prev + 1);
+        refetch(); // Retry fetching the image
+      }, 2000); // Delay of 2 seconds
+
+      return () => clearTimeout(timer); // Clean up the timeout if the component unmounts or retry attempt changes
+    }
+  }, [error, retryAttempt, refetch]);
 
   // Menu state
   const [anchorEl, setAnchorEl] = useState(null);
@@ -165,7 +185,8 @@ const MyParkingLots = () => {
   const [addParkingLot] = useAddParkingLotMutation();
   const [createUserFolderStructure] = useCreateUserFolderStructureMutation(); // Initialize the mutation hook
   const userId = useSelector((state) => state.auth.userId);
-  const { data, isLoading } = useGetAllParkingLotsByUserIdQuery(userId);
+  const { data, isLoading, refetch } =
+    useGetAllParkingLotsByUserIdQuery(userId);
   const [uploadImage] = useUploadPhotoMutation(); // Initialize the upload mutation hook
   const isNonMobile = useMediaQuery("(min-width:1000px)");
 
@@ -202,7 +223,6 @@ const MyParkingLots = () => {
         ...parkingLotData,
       }).unwrap();
 
-      // Use the correct key from the response
       const parkingLotId = addedParkingLot.parkingLotId;
 
       // Step 2: Create the folder structure in Firebase Storage
@@ -214,17 +234,42 @@ const MyParkingLots = () => {
 
       // Step 3: Upload the parking lot image to Firebase Storage
       if (parkingLotData.avatar) {
-        const uploadResponse = await uploadImage({
+        await uploadImage({
           image: parkingLotData.avatar,
           path: `${userId}/myparkinglots/${parkingLotId}`,
-        });
+        }).unwrap();
 
-        // You can handle the download URL if needed
-        const downloadURL = uploadResponse?.data?.downloadURL;
-        console.log("Parking lot image uploaded successfully:", downloadURL);
+        console.log("Parking lot image uploaded successfully.");
       }
 
-      handleClose();
+      // Step 4: Retry mechanism for refetching
+      const maxRetries = 3;
+      let attempt = 0;
+      let success = false;
+
+      while (attempt < maxRetries && !success) {
+        try {
+          // Attempt to refetch the data
+          await refetch();
+          success = true; // If refetch is successful, set success to true
+        } catch (err) {
+          attempt++;
+          if (attempt < maxRetries) {
+            console.log(`Retrying refetch... Attempt ${attempt}`);
+            // Wait for 2 seconds before trying again
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+          } else {
+            console.error(
+              "Failed to refetch parking lots data after several attempts:",
+              err
+            );
+          }
+        }
+      }
+
+      if (success) {
+        handleClose();
+      }
     } catch (err) {
       console.error("Failed to add parking lot:", err);
     }
