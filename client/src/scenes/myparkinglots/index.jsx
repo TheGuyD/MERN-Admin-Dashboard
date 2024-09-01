@@ -25,6 +25,7 @@ import {
   useCreateUserFolderStructureMutation, // Import the hook
   useUploadPhotoMutation,
   useRetriveImageQuery,
+  useDeleteParkingLotMutation,
 } from "state/dataManagementApi";
 import { useSelector } from "react-redux";
 import FlexBetween from "components/FlexBetween";
@@ -46,7 +47,7 @@ const ParkingLotCard = ({
 
   const [retryAttempt, setRetryAttempt] = useState(0);
   const maxRetries = 3; // You can adjust this as needed
-
+  const [deleteParkingLot] = useDeleteParkingLotMutation();
   // Fetch the profile image for the parking lot
   const {
     data: imageData,
@@ -90,8 +91,18 @@ const ParkingLotCard = ({
     handleMenuClose();
   };
 
-  const handleDelete = () => {
-    // Implement delete logic
+  const handleDelete = async () => {
+    try {
+      await deleteParkingLot({
+        parkingLotId: _id, // Correctly pass this as a separate field
+        ownerUserId: userId, // Correctly pass this as a separate field
+      }).unwrap();
+      console.log("🚀 ~ handleDelete ~ userId:", userId);
+      console.log("Parking lot deleted successfully");
+      //refetch(); // Refetch the data to update the UI
+    } catch (error) {
+      console.error("Failed to delete parking lot", error);
+    }
     handleMenuClose();
   };
 
@@ -185,8 +196,7 @@ const MyParkingLots = () => {
   const [addParkingLot] = useAddParkingLotMutation();
   const [createUserFolderStructure] = useCreateUserFolderStructureMutation(); // Initialize the mutation hook
   const userId = useSelector((state) => state.auth.userId);
-  const { data, isLoading, refetch } =
-    useGetAllParkingLotsByUserIdQuery(userId);
+  const { data, refetch } = useGetAllParkingLotsByUserIdQuery(userId);
   const [uploadImage] = useUploadPhotoMutation(); // Initialize the upload mutation hook
   const isNonMobile = useMediaQuery("(min-width:1000px)");
 
@@ -303,32 +313,14 @@ const MyParkingLots = () => {
             "& > div": { gridColumn: isNonMobile ? undefined : "span 4" },
           }}
         >
-          {data.map(
-            ({
-              _id,
-              parkingLotName,
-              address,
-              hourlyParkingCost,
-              operationHours,
-              numberOfParkingSlot,
-              sumCurrOcupiedSlots,
-              monthlyEstimatedRevenue,
-            }) => (
-              <ParkingLotCard
-                key={_id}
-                _id={_id}
-                parkingLotName={parkingLotName}
-                address={address}
-                hourlyParkingCost={hourlyParkingCost}
-                operationHours={operationHours}
-                numberOfParkingSlot={numberOfParkingSlot}
-                sumCurrOcupiedSlots={sumCurrOcupiedSlots}
-                monthlyEstimatedRevenue={monthlyEstimatedRevenue}
-                isExpanded={expandedCardId === _id}
-                handleExpandClick={handleExpandClick}
-              />
-            )
-          )}
+          {data.map((parkingLot) => (
+            <ParkingLotCard
+              key={parkingLot._id}
+              {...parkingLot}
+              isExpanded={expandedCardId === parkingLot._id}
+              handleExpandClick={handleExpandClick}
+            />
+          ))}
         </Box>
       ) : (
         <>Loading...</>
