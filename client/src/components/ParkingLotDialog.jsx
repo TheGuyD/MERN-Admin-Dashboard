@@ -14,6 +14,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import AutoFillAwareTextField from "components/AutoFillAwareTextField";
 import ImagePicker from "components/ImagePicker";
+import { useRetriveImageQuery } from "state/dataManagementApi";
 
 const ParkingLotDialog = ({
   open,
@@ -31,6 +32,19 @@ const ParkingLotDialog = ({
   const [avatar, setAvatar] = useState(null);
   const theme = useTheme();
 
+  // Fetch the current image when editing
+  const { data: imageData, refetch: refetchImage } = useRetriveImageQuery(
+    parkingLotToEdit
+      ? {
+          imageName: "profile.png",
+          path: `${parkingLotToEdit.ownerUserId}/myparkinglots/${parkingLotToEdit._id}`,
+        }
+      : null,
+    {
+      skip: !parkingLotToEdit, // Skip query if not editing
+    }
+  );
+
   useEffect(() => {
     if (parkingLotToEdit) {
       setParkingLotName(parkingLotToEdit.parkingLotName);
@@ -40,11 +54,12 @@ const ParkingLotDialog = ({
       setEndingAt(new Date(parkingLotToEdit.operationHours.endingAt));
       setNumberOfParkingSlot(parkingLotToEdit.numberOfParkingSlot);
       setUpdateInterval(parkingLotToEdit.updateInterval);
-      setAvatar(parkingLotToEdit.avatar);
+      // If the user hasn't changed the image yet, use the fetched image
+      setAvatar(imageData?.downloadURL);
     } else {
       resetForm();
     }
-  }, [parkingLotToEdit]);
+  }, [parkingLotToEdit, imageData]);
 
   const resetForm = () => {
     setParkingLotName("");
@@ -118,6 +133,7 @@ const ParkingLotDialog = ({
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
+          mb: "40px",
         }}
       >
         <ImagePicker

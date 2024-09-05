@@ -135,10 +135,13 @@ const UserInformation = () => {
           image: selectedFile,
           path: `${user._id}/userinformation`,
         });
-        
+
         // Update the global state with the new profile image URL
         if (uploadResponse?.data.downloadURL) {
-          console.log("🚀 ~ handleSubmit ~ uploadResponse?.data.downloadURL:", uploadResponse?.data.downloadURL)
+          console.log(
+            "🚀 ~ handleSubmit ~ uploadResponse?.data.downloadURL:",
+            uploadResponse?.data.downloadURL
+          );
           dispatch(setProfileImage(uploadResponse?.data.downloadURL));
         }
       }
@@ -183,183 +186,180 @@ const UserInformation = () => {
   };
 
   return (
-    <Container
-      maxWidth="md"
-      sx={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        height: "100vh",
-      }}
-    >
-      <Box
-        component="form"
-        onSubmit={handleSubmit}
+    <Box m="1.5rem 2.5rem">
+      <Header title="User Information" subtitle="Your Personal information" />
+      <Container
+        maxWidth="md"
         sx={{
           display: "flex",
-          flexDirection: "column",
-          gap: 2,
-          width: "100%",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "75vh",
         }}
       >
-        <Box mb="175px">
-          <Header
-            title="User Information"
-            subtitle="Your Personal information"
-          />
-        </Box>
-
-        {/* Centered Image Picker */}
         <Box
+          component="form"
+          onSubmit={handleSubmit}
           sx={{
             display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
+            flexDirection: "column",
+            gap: 2,
+            width: "100%",
           }}
         >
-          <ImagePicker
-            onImageChange={handleImageChange}
-            imageUrl={avatar} // Pass the current or newly selected avatar
-          />
-        </Box>
-
-        <Typography
-          variant="body2"
-          color="error"
-          sx={{ display: errMsg ? "block" : "none" }}
-        >
-          {errMsg}
-        </Typography>
-
-        <Typography
-          variant="body2"
-          color="success.main"
-          sx={{ display: successMsg ? "block" : "none" }}
-        >
-          {successMsg}
-        </Typography>
-
-        <AutoFillAwareTextField
-          label="Username"
-          variant="outlined"
-          size="small"
-          autoComplete="off"
-          onChange={(e) => setUserName(e.target.value)}
-          value={userName}
-          required
-          error={!validUserName && Boolean(userName)}
-          helperText={
-            userName &&
-            !validUserName && (
-              <span>
-                4 to 24 characters. Must begin with a letter. Letters, numbers,
-                underscores, hyphens allowed.
-              </span>
-            )
-          }
-        />
-
-        <AutoFillAwareTextField
-          label="Email"
-          variant="outlined"
-          size="small"
-          onChange={(e) => setEmail(e.target.value)}
-          value={email}
-          required
-          error={!validEmail && Boolean(email)}
-          helperText={email && !validEmail && <span>Not a valid Email.</span>}
-        />
-
-        <AutoFillAwareTextField
-          label="First Name"
-          variant="outlined"
-          size="small"
-          onChange={(e) => setFirstName(e.target.value)}
-          value={firstName}
-          required
-          error={!validFirstName && Boolean(firstName)}
-          helperText={
-            firstName &&
-            !validFirstName && (
-              <span>First Name must be at least 2 letters long.</span>
-            )
-          }
-        />
-
-        <AutoFillAwareTextField
-          label="Last Name"
-          variant="outlined"
-          size="small"
-          onChange={(e) => setLastName(e.target.value)}
-          value={lastName}
-          required
-          error={!validLastName && Boolean(lastName)}
-          helperText={
-            lastName &&
-            !validLastName && (
-              <span>Last Name must be at least 2 letters long.</span>
-            )
-          }
-        />
-
-        <AutoFillAwareTextField
-          label="Company Name"
-          variant="outlined"
-          size="small"
-          onChange={(e) => setCompanyName(e.target.value)}
-          value={companyName}
-          required
-          error={!validCompanyName && Boolean(companyName)}
-          helperText={
-            companyName &&
-            !validCompanyName && (
-              <span>Company Name must be at least 2 letters long.</span>
-            )
-          }
-        />
-
-        <AutoFillAwareTextField
-          label="Address"
-          variant="outlined"
-          size="small"
-          onChange={(e) => setAddress(e.target.value)}
-          value={address}
-          required
-        />
-
-        <AutoFillAwareTextField
-          label="Phone Number"
-          variant="outlined"
-          size="small"
-          onChange={(e) => setPhoneNumber(e.target.value)}
-          value={phoneNumber}
-          error={!validPhoneNumber && Boolean(phoneNumber)}
-          helperText={
-            phoneNumber &&
-            !validPhoneNumber && <span>Not a valid Phone Number.</span>
-          }
-        />
-
-        <Box sx={{ display: "flex", justifyContent: "space-between", mt: 3 }}>
-          <Button
-            type="submit"
-            variant="contained"
-            color="primary"
-            disabled={loading}
-            startIcon={loading ? <CircularProgress size={24} /> : null}
+          {/* Centered Image Picker */}
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              mb: "100px",
+            }}
           >
-            Update Information
-          </Button>
-          <Button
-            variant="outlined"
+            <ImagePicker
+              onImageChange={handleImageChange}
+              imageUrl={avatar} // Pass the current or newly selected avatar
+            />
+          </Box>
+
+          <Typography
+            variant="body2"
             color="error"
-            onClick={handleDeleteAccount}
+            sx={{ display: errMsg ? "block" : "none" }}
           >
-            Delete Account
-          </Button>
+            {errMsg}
+          </Typography>
+
+          <Typography
+            variant="body2"
+            color="success.main"
+            sx={{ display: successMsg ? "block" : "none" }}
+          >
+            {successMsg}
+          </Typography>
+
+          <AutoFillAwareTextField
+            label="Username"
+            variant="outlined"
+            size="small"
+            autoComplete="off"
+            onChange={(e) => setUserName(e.target.value)}
+            value={userName}
+            required
+            error={!validUserName && Boolean(userName)}
+            helperText={
+              userName &&
+              !validUserName && (
+                <span>
+                  4 to 24 characters. Must begin with a letter. Letters,
+                  numbers, underscores, hyphens allowed.
+                </span>
+              )
+            }
+          />
+
+          <AutoFillAwareTextField
+            label="Email"
+            variant="outlined"
+            size="small"
+            onChange={(e) => setEmail(e.target.value)}
+            value={email}
+            required
+            error={!validEmail && Boolean(email)}
+            helperText={email && !validEmail && <span>Not a valid Email.</span>}
+          />
+
+          <AutoFillAwareTextField
+            label="First Name"
+            variant="outlined"
+            size="small"
+            onChange={(e) => setFirstName(e.target.value)}
+            value={firstName}
+            required
+            error={!validFirstName && Boolean(firstName)}
+            helperText={
+              firstName &&
+              !validFirstName && (
+                <span>First Name must be at least 2 letters long.</span>
+              )
+            }
+          />
+
+          <AutoFillAwareTextField
+            label="Last Name"
+            variant="outlined"
+            size="small"
+            onChange={(e) => setLastName(e.target.value)}
+            value={lastName}
+            required
+            error={!validLastName && Boolean(lastName)}
+            helperText={
+              lastName &&
+              !validLastName && (
+                <span>Last Name must be at least 2 letters long.</span>
+              )
+            }
+          />
+
+          <AutoFillAwareTextField
+            label="Company Name"
+            variant="outlined"
+            size="small"
+            onChange={(e) => setCompanyName(e.target.value)}
+            value={companyName}
+            required
+            error={!validCompanyName && Boolean(companyName)}
+            helperText={
+              companyName &&
+              !validCompanyName && (
+                <span>Company Name must be at least 2 letters long.</span>
+              )
+            }
+          />
+
+          <AutoFillAwareTextField
+            label="Address"
+            variant="outlined"
+            size="small"
+            onChange={(e) => setAddress(e.target.value)}
+            value={address}
+            required
+          />
+
+          <AutoFillAwareTextField
+            label="Phone Number"
+            variant="outlined"
+            size="small"
+            onChange={(e) => setPhoneNumber(e.target.value)}
+            value={phoneNumber}
+            error={!validPhoneNumber && Boolean(phoneNumber)}
+            helperText={
+              phoneNumber &&
+              !validPhoneNumber && <span>Not a valid Phone Number.</span>
+            }
+          />
+
+          <Box sx={{ display: "flex", justifyContent: "space-between", mt: 3 }}>
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              disabled={loading}
+              startIcon={loading ? <CircularProgress size={24} /> : null}
+            >
+              Update Information
+            </Button>
+            <Button
+              variant="outlined"
+              color="error"
+              onClick={handleDeleteAccount}
+            >
+              Delete Account
+            </Button>
+          </Box>
         </Box>
-      </Box>
-    </Container>
+      </Container>
+    </Box>
   );
 };
 
