@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Box, Button, useMediaQuery } from "@mui/material";
 import Header from "components/Header";
 import ParkingLotDialog from "components/ParkingLotDialog";
@@ -23,7 +23,7 @@ const MyParkingLots = () => {
   const [uploadImage] = useUploadPhotoMutation();
   const isNonMobile = useMediaQuery("(min-width:1000px)");
   const [parkingLotToEdit, setParkingLotToEdit] = useState(null);
-  const [updatedImageId, setUpdatedImageId] = useState(null);
+  const [imageUpdatedMap, setImageUpdatedMap] = useState({});
 
   const handleOpen = (parkingLot = null) => {
     setParkingLotToEdit(parkingLot);
@@ -76,8 +76,11 @@ const MyParkingLots = () => {
           path: `${userId}/myparkinglots/${response.parkingLotId}`,
         }).unwrap();
 
-        // Trigger the image refetch for the specific parking lot
-        setUpdatedImageId(response.parkingLotId);
+        // Mark the image as updated for the specific parking lot
+        setImageUpdatedMap((prevMap) => ({
+          ...prevMap,
+          [response.parkingLotId]: Date.now(), // Use a timestamp to force re-render
+        }));
       }
 
       await refetch(); // Refetch the parking lot data to update the UI
@@ -128,7 +131,7 @@ const MyParkingLots = () => {
               isExpanded={expandedCardId === parkingLot._id}
               handleExpandClick={handleExpandClick}
               handleEdit={handleEdit}
-              onImageUpdated={updatedImageId === parkingLot._id} // Pass the refetch trigger
+              imageUpdated={imageUpdatedMap[parkingLot._id]} // Pass the image update status
             />
           ))}
         </Box>

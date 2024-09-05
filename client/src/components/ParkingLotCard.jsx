@@ -34,7 +34,7 @@ const ParkingLotCard = ({
   isExpanded,
   handleExpandClick,
   handleEdit,
-  onImageUpdated, // New prop to force image refetch
+  imageUpdated, // New prop to force image refetch
 }) => {
   const theme = useTheme();
   const [deleteParkingLot] = useDeleteParkingLotMutation();
@@ -53,12 +53,13 @@ const ParkingLotCard = ({
 
   const imageUrl = imageData?.downloadURL || placeHolderImage;
 
-  // Force refetch when the parent component notifies about image update
+  // Refetch the image when the parent component notifies about an update
   useEffect(() => {
-    if (onImageUpdated) {
+    if (imageUpdated) {
+      setRetryAttempt(0); // Reset retry attempt on new image update
       refetchImage();
     }
-  }, [onImageUpdated, refetchImage]);
+  }, [imageUpdated, refetchImage]);
 
   useEffect(() => {
     if (error && retryAttempt < maxRetries) {
