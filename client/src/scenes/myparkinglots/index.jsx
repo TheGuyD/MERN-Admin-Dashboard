@@ -1,224 +1,43 @@
 import React, { useState, useEffect } from "react";
-import {
-  Box,
-  Card,
-  CardActions,
-  CardContent,
-  Collapse,
-  Button,
-  Typography,
-  useTheme,
-  useMediaQuery,
-  CardActionArea,
-  CardMedia,
-  IconButton,
-  Menu,
-  MenuItem,
-} from "@mui/material";
-import MenuOpenRoundedIcon from "@mui/icons-material/MenuOpenRounded";
-import AddParkingLotDialog from "components/AddParkingLotDialog";
+import { Box, Button, useMediaQuery } from "@mui/material";
 import Header from "components/Header";
-import placeHolderImage from "assets/parkingLot.png";
+import ParkingLotDialog from "components/ParkingLotDialog";
+import ParkingLotCard from "components/ParkingLotCard";
 import {
   useAddParkingLotMutation,
   useGetAllParkingLotsByUserIdQuery,
-  useCreateUserFolderStructureMutation, // Import the hook
+  useCreateUserFolderStructureMutation,
   useUploadPhotoMutation,
-  useRetriveImageQuery,
-  useDeleteParkingLotMutation,
+  useUpdateParkingLotMutation,
 } from "state/dataManagementApi";
 import { useSelector } from "react-redux";
-import FlexBetween from "components/FlexBetween";
-
-const ParkingLotCard = ({
-  _id,
-  parkingLotName,
-  address,
-  hourlyParkingCost,
-  operationHours,
-  numberOfParkingSlot,
-  sumCurrOcupiedSlots,
-  monthlyEstimatedRevenue,
-  isExpanded,
-  handleExpandClick,
-}) => {
-  const theme = useTheme();
-  const { userId } = useSelector((state) => state.auth);
-
-  const [retryAttempt, setRetryAttempt] = useState(0);
-  const maxRetries = 3; // You can adjust this as needed
-  const [deleteParkingLot] = useDeleteParkingLotMutation();
-  // Fetch the profile image for the parking lot
-  const {
-    data: imageData,
-    error,
-    refetch,
-  } = useRetriveImageQuery({
-    imageName: "profile.png",
-    path: `${userId}/myparkinglots/${_id}`,
-  });
-
-  // Determine the image to display
-  const imageUrl = imageData?.downloadURL || placeHolderImage;
-
-  // Effect to handle retry logic
-  useEffect(() => {
-    if (error && retryAttempt < maxRetries) {
-      const timer = setTimeout(() => {
-        console.log(`Retrying image retrieval... Attempt ${retryAttempt + 1}`);
-        setRetryAttempt((prev) => prev + 1);
-        refetch(); // Retry fetching the image
-      }, 2000); // Delay of 2 seconds
-
-      return () => clearTimeout(timer); // Clean up the timeout if the component unmounts or retry attempt changes
-    }
-  }, [error, retryAttempt, refetch]);
-
-  // Menu state
-  const [anchorEl, setAnchorEl] = useState(null);
-  const openMenu = Boolean(anchorEl);
-
-  const handleMenuOpen = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
-
-  const handleEdit = () => {
-    // Implement edit logic
-    handleMenuClose();
-  };
-
-  const handleDelete = async () => {
-    try {
-      await deleteParkingLot({
-        parkingLotId: _id, // Correctly pass this as a separate field
-        ownerUserId: userId, // Correctly pass this as a separate field
-      }).unwrap();
-      console.log("🚀 ~ handleDelete ~ userId:", userId);
-      console.log("Parking lot deleted successfully");
-      //refetch(); // Refetch the data to update the UI
-    } catch (error) {
-      console.error("Failed to delete parking lot", error);
-    }
-    handleMenuClose();
-  };
-
-  return (
-    <Card
-      sx={{
-        background: "none",
-        backgroundColor: theme.palette.background.alt,
-        borderRadius: "0.55rem",
-        boxShadow: isExpanded ? "0 4px 8px rgba(0, 0, 0, 0.1)" : "none",
-        transition: "box-shadow 0.3s ease",
-        overflow: "hidden",
-      }}
-    >
-      <CardActionArea>
-        <CardMedia
-          component="img"
-          height="140"
-          image={imageUrl} // Use the fetched image URL or placeholder
-          alt={parkingLotName}
-          style={{ objectFit: "contain" }} //
-        />
-        <CardContent>
-          <Typography
-            sx={{ fontSize: 14 }}
-            color={theme.palette.secondary[700]}
-            gutterBottom
-          >
-            {address}
-          </Typography>
-          <Typography variant="h5" component="div">
-            {parkingLotName}
-          </Typography>
-          <Typography
-            sx={{ mb: "1.5rem" }}
-            color={theme.palette.secondary[400]}
-          >
-            ${Number(hourlyParkingCost).toFixed(2)} / hour
-          </Typography>
-          <Typography variant="body2">
-            Slots Available: {numberOfParkingSlot - sumCurrOcupiedSlots}
-          </Typography>
-        </CardContent>
-      </CardActionArea>
-      <CardActions>
-        <Button
-          variant="primary"
-          size="small"
-          onClick={() => handleExpandClick(_id)}
-          sx={{ minWidth: "100px" }}
-        >
-          {isExpanded ? "See Less" : "See More"}
-        </Button>
-        <FlexBetween sx={{ width: "100%" }} />
-        <IconButton
-          aria-label="settings"
-          onClick={handleMenuOpen}
-          sx={{ ml: "auto" }}
-        >
-          <MenuOpenRoundedIcon />
-        </IconButton>
-        <Menu anchorEl={anchorEl} open={openMenu} onClose={handleMenuClose}>
-          <MenuItem onClick={handleEdit}>Edit</MenuItem>
-          <MenuItem onClick={handleDelete}>Delete</MenuItem>
-        </Menu>
-      </CardActions>
-      <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-        <CardContent>
-          <Typography>id: {_id}</Typography>
-          <Typography>Total Slots: {numberOfParkingSlot}</Typography>
-          <Typography>
-            Currently Occupied Slots: {sumCurrOcupiedSlots}
-          </Typography>
-          <Typography>
-            Monthly Estimated Revenue: ${monthlyEstimatedRevenue.toFixed(2)}
-          </Typography>
-          <Typography>
-            Operation Hours:{" "}
-            {new Date(operationHours.startingAt).toLocaleTimeString()} -{" "}
-            {new Date(operationHours.endingAt).toLocaleTimeString()}
-          </Typography>
-        </CardContent>
-      </Collapse>
-    </Card>
-  );
-};
 
 const MyParkingLots = () => {
   const [open, setOpen] = useState(false);
   const [expandedCardId, setExpandedCardId] = useState(null);
   const [addParkingLot] = useAddParkingLotMutation();
-  const [createUserFolderStructure] = useCreateUserFolderStructureMutation(); // Initialize the mutation hook
+  const [updateParkingLot] = useUpdateParkingLotMutation();
+  const [createUserFolderStructure] = useCreateUserFolderStructureMutation();
   const userId = useSelector((state) => state.auth.userId);
   const { data, refetch } = useGetAllParkingLotsByUserIdQuery(userId);
-  const [uploadImage] = useUploadPhotoMutation(); // Initialize the upload mutation hook
+  const [uploadImage] = useUploadPhotoMutation();
   const isNonMobile = useMediaQuery("(min-width:1000px)");
+  const [parkingLotToEdit, setParkingLotToEdit] = useState(null);
+  const [updatedImageId, setUpdatedImageId] = useState(null);
 
-  // useEffect(() => {
-  //   const createUserFolder = async () => {
-  //     try {
-  //       const response = await createUserFolderStructure({ userId }).unwrap();
-  //       console.log("Folder structure created:", response);
-  //     } catch (err) {
-  //       console.error("Failed to create folder structure:", err);
-  //     }
-  //   };
-
-  //   createUserFolder(); // Trigger the API call when the component mounts
-  // }, [createUserFolderStructure, userId]);
-
-  const handleOpen = () => {
+  const handleOpen = (parkingLot = null) => {
+    setParkingLotToEdit(parkingLot);
     setOpen(true);
+  };
+
+  const handleEdit = (parkingLotId) => {
+    const parkingLotToEdit = data.find((lot) => lot._id === parkingLotId);
+    handleOpen(parkingLotToEdit);
   };
 
   const handleClose = () => {
     setOpen(false);
+    setParkingLotToEdit(null);
   };
 
   const handleExpandClick = (id) => {
@@ -227,61 +46,45 @@ const MyParkingLots = () => {
 
   const handleSubmit = async (parkingLotData) => {
     try {
-      // Step 1: Add the parking lot to the database
-      const addedParkingLot = await addParkingLot({
-        ownerUserId: userId,
-        ...parkingLotData,
-      }).unwrap();
-
-      const parkingLotId = addedParkingLot.parkingLotId;
-
-      // Step 2: Create the folder structure in Firebase Storage
-      await createUserFolderStructure({
-        userId: userId,
-        context: "parkinglot",
-        parkingLotId: parkingLotId,
-      }).unwrap();
-
-      // Step 3: Upload the parking lot image to Firebase Storage
-      if (parkingLotData.avatar) {
-        await uploadImage({
-          image: parkingLotData.avatar,
-          path: `${userId}/myparkinglots/${parkingLotId}`,
+      let response;
+      if (parkingLotToEdit) {
+        // Update existing parking lot
+        response = await updateParkingLot({
+          parkingLotId: parkingLotData._id,
+          ownerUserId: userId,
+          ...parkingLotData,
+        }).unwrap();
+      } else {
+        // Add new parking lot
+        response = await addParkingLot({
+          ownerUserId: userId,
+          ...parkingLotData,
         }).unwrap();
 
-        console.log("Parking lot image uploaded successfully.");
+        // Create user folder structure if adding a new parking lot
+        await createUserFolderStructure({
+          userId: userId,
+          context: "parkinglot",
+          parkingLotId: response.parkingLotId,
+        }).unwrap();
       }
 
-      // Step 4: Retry mechanism for refetching
-      const maxRetries = 3;
-      let attempt = 0;
-      let success = false;
+      // Upload image if a new one is selected
+      if (parkingLotData.avatar && parkingLotData.avatar instanceof File) {
+        await uploadImage({
+          image: parkingLotData.avatar,
+          path: `${userId}/myparkinglots/${response.parkingLotId}`,
+        }).unwrap();
 
-      while (attempt < maxRetries && !success) {
-        try {
-          // Attempt to refetch the data
-          await refetch();
-          success = true; // If refetch is successful, set success to true
-        } catch (err) {
-          attempt++;
-          if (attempt < maxRetries) {
-            console.log(`Retrying refetch... Attempt ${attempt}`);
-            // Wait for 2 seconds before trying again
-            await new Promise((resolve) => setTimeout(resolve, 2000));
-          } else {
-            console.error(
-              "Failed to refetch parking lots data after several attempts:",
-              err
-            );
-          }
-        }
+        // Trigger the image refetch for the specific parking lot
+        setUpdatedImageId(response.parkingLotId);
       }
 
-      if (success) {
-        handleClose();
-      }
+      await refetch(); // Refetch the parking lot data to update the UI
+
+      handleClose(); // Close the dialog after successful submission
     } catch (err) {
-      console.error("Failed to add parking lot:", err);
+      console.error("Failed to submit parking lot:", err);
     }
   };
 
@@ -292,14 +95,19 @@ const MyParkingLots = () => {
         subtitle="See your list of Parking Lots."
       />
       <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2, mb: 2 }}>
-        <Button variant="contained" color="primary" onClick={handleOpen}>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => handleOpen()}
+        >
           Add Parking Lot
         </Button>
       </Box>
-      <AddParkingLotDialog
+      <ParkingLotDialog
         open={open}
         handleClose={handleClose}
         handleSubmit={handleSubmit}
+        parkingLotToEdit={parkingLotToEdit}
       />
       {data && Array.isArray(data) && data.length > 0 ? (
         <Box
@@ -319,6 +127,8 @@ const MyParkingLots = () => {
               {...parkingLot}
               isExpanded={expandedCardId === parkingLot._id}
               handleExpandClick={handleExpandClick}
+              handleEdit={handleEdit}
+              onImageUpdated={updatedImageId === parkingLot._id} // Pass the refetch trigger
             />
           ))}
         </Box>
