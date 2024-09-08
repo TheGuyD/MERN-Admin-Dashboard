@@ -18,7 +18,7 @@ import { useSelector } from "react-redux";
 
 const CameraDialog = ({ open, handleClose, parkingLotId, cameraToEdit }) => {
   const theme = useTheme();
-  const [model, setModel] = useState("");
+  const [cameraModel, setCameraModel] = useState("");
   const [area, setArea] = useState("");
   const [cameraAddr, setCameraAddr] = useState("");
   const [blueprint, setBlueprint] = useState(null);
@@ -29,7 +29,7 @@ const CameraDialog = ({ open, handleClose, parkingLotId, cameraToEdit }) => {
 
   useEffect(() => {
     if (cameraToEdit) {
-      setModel(cameraToEdit.model);
+      setCameraModel(cameraToEdit.cameraModel);
       setArea(cameraToEdit.area);
       setCameraAddr(cameraToEdit.cameraAddr);
       setBlueprint(cameraToEdit.blueprint);
@@ -39,7 +39,7 @@ const CameraDialog = ({ open, handleClose, parkingLotId, cameraToEdit }) => {
   }, [cameraToEdit]);
 
   const resetForm = () => {
-    setModel("");
+    setCameraModel("");
     setArea("");
     setCameraAddr("");
     setBlueprint(null);
@@ -66,7 +66,7 @@ const CameraDialog = ({ open, handleClose, parkingLotId, cameraToEdit }) => {
   const handleSubmit = async () => {
     try {
       const cameraData = {
-        model,
+        cameraModel,
         area,
         cameraAddr,
         blueprint,
@@ -107,8 +107,8 @@ const CameraDialog = ({ open, handleClose, parkingLotId, cameraToEdit }) => {
               label="Camera Model"
               type="text"
               fullWidth
-              value={model}
-              onChange={(e) => setModel(e.target.value)}
+              value={cameraModel}
+              onChange={(e) => setCameraModel(e.target.value)}
             />
           </Grid>
           <Grid item xs={12}>
@@ -171,7 +171,7 @@ const CameraDialog = ({ open, handleClose, parkingLotId, cameraToEdit }) => {
         </Button>
         <Button
           onClick={handleSubmit}
-          disabled={!model || !area || !cameraAddr || !blueprint}
+          disabled={!cameraModel || !area || !cameraAddr || !blueprint}
           sx={{
             color:
               theme.palette.mode === "dark"

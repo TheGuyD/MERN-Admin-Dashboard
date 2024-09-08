@@ -61,9 +61,9 @@ const CameraCard = ({ camera, onEdit, onDelete }) => {
             component="div"
             gutterBottom
             noWrap
-            title={camera.model}
+            title={camera.cameraModel}
           >
-            {camera.model}
+            {camera.cameraModel}
           </Typography>
           <Typography variant="body2" color="text.secondary" gutterBottom>
             Area: {camera.area}
