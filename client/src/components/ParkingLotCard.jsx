@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Card,
   CardActions,
@@ -41,6 +42,7 @@ const ParkingLotCard = ({
   const { userId } = useSelector((state) => state.auth);
   const [retryAttempt, setRetryAttempt] = useState(0);
   const maxRetries = 3;
+  const navigate = useNavigate();
 
   const {
     data: imageData,
@@ -101,6 +103,10 @@ const ParkingLotCard = ({
     handleMenuClose();
   };
 
+  const handleCardClick = () => {
+    navigate(`/parkinglot/${_id}`);
+  };
+
   return (
     <Card
       sx={{
@@ -112,7 +118,7 @@ const ParkingLotCard = ({
         overflow: "hidden",
       }}
     >
-      <CardActionArea>
+      <CardActionArea onClick={handleCardClick}>
         <CardMedia
           component="img"
           height="140"
