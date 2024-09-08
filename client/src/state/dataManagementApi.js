@@ -3,30 +3,38 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 export const dataManagementApi = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: "http://localhost:3000/data-management/",
+    credentials: 'include',
   }),
   reducerPath: "dataManagementApi",
   tagTypes: ["Camera", "ParkingLot", "Document", "User"],
   endpoints: (build) => ({
     // Camera Endpoints
     getCameras: build.query({
-      query: () => `camera/getAllCameras`, // Adjust this if there's a specific GET route
+      query: (parkingLotId) => `camera/getCameras/${parkingLotId}`,
       providesTags: ["Camera"],
     }),
     addCamera: build.mutation({
       query: (newCamera) => ({
-        url: `camera/addCamera`,
-        method: "POST",
+        url: 'camera/addCamera',
+        method: 'POST',
         body: newCamera,
       }),
       invalidatesTags: ["Camera"],
     }),
-    updateCameraBlueprint: build.mutation({
-      query: ({ cameraId, blueprint }) => ({
-        url: `camera/updateBlueprintCamera`,
-        method: "POST",
-        body: { cameraId, blueprint },
+    updateCamera: build.mutation({
+      query: (updatedCamera) => ({
+        url: `camera/updateCamera/${updatedCamera.id}`,
+        method: 'PUT',
+        body: updatedCamera,
       }),
-      invalidatesTags: ["Camera"],
+      invalidatesTags: ['Camera'],
+    }),
+    deleteCamera: build.mutation({
+      query: (cameraId) => ({
+        url: `camera/deleteCamera/${cameraId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Camera'],
     }),
     removeCamera: build.mutation({
       query: (cameraId) => ({
@@ -168,7 +176,8 @@ export const dataManagementApi = createApi({
 export const {
   useGetCamerasQuery,
   useAddCameraMutation,
-  useUpdateCameraBlueprintMutation,
+  useUpdateCameraMutation,
+  useDeleteCameraMutation,
   useRemoveCameraMutation,
   useGetAllParkingLotsByUserIdQuery,
   useAddParkingLotMutation,
