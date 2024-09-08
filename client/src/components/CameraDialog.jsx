@@ -23,26 +23,32 @@ const CameraDialog = ({ open, handleClose, parkingLotId, cameraToEdit }) => {
   const [cameraAddr, setCameraAddr] = useState("");
   const [blueprint, setBlueprint] = useState(null);
   const [blueprintStatus, setBlueprintStatus] = useState(null);
+  const [error, setError] = useState(null);
   const [addCamera] = useAddCameraMutation();
   const [updateCamera] = useUpdateCameraMutation();
   const userId = useSelector((state) => state.auth.userId);
 
   useEffect(() => {
-    if (cameraToEdit) {
-      setCameraModel(cameraToEdit.cameraModel);
-      setArea(cameraToEdit.area);
-      setCameraAddr(cameraToEdit.cameraAddr);
-      setBlueprint(cameraToEdit.blueprint);
-    } else {
-      resetForm();
+    if (open) {
+      if (cameraToEdit) {
+        setCameraModel(cameraToEdit.cameraModel);
+        setArea(cameraToEdit.area);
+        setCameraAddr(cameraToEdit.cameraAddr);
+        setBlueprint(cameraToEdit.blueprint);
+        setBlueprintStatus("success");
+      } else {
+        resetForm();
+      }
     }
-  }, [cameraToEdit]);
+  }, [open, cameraToEdit]);
 
   const resetForm = () => {
     setCameraModel("");
     setArea("");
     setCameraAddr("");
     setBlueprint(null);
+    setBlueprintStatus(null);
+    setError(null);
   };
 
   const handleFileUpload = (event) => {
@@ -52,10 +58,20 @@ const CameraDialog = ({ open, handleClose, parkingLotId, cameraToEdit }) => {
       reader.onload = (e) => {
         try {
           const json = JSON.parse(e.target.result);
+
+          // Validate the blueprint structure
+          const blueprintValidation = validateBlueprint(json);
+          if (!blueprintValidation.isValid) {
+            setError(`Invalid blueprint: ${blueprintValidation.error}`);
+            setBlueprintStatus("error");
+            return;
+          }
+
           setBlueprint(json);
           setBlueprintStatus("success");
         } catch (error) {
           console.error("Error parsing JSON:", error);
+          setError("Error parsing JSON: " + error.message);
           setBlueprintStatus("error");
         }
       };
@@ -63,8 +79,46 @@ const CameraDialog = ({ open, handleClose, parkingLotId, cameraToEdit }) => {
     }
   };
 
+  // Helper function to validate blueprint
+  const validateBlueprint = (blueprint) => {
+    if (!blueprint.categories || blueprint.categories.length === 0) {
+      return { isValid: false, error: "Categories array is empty" };
+    }
+
+    for (let category of blueprint.categories) {
+      if (!category.id || !category.name || !("supercategory" in category)) {
+        return { isValid: false, error: "Invalid category object structure" };
+      }
+    }
+
+    if (!blueprint.annotations || blueprint.annotations.length === 0) {
+      return { isValid: false, error: "Annotations array is empty" };
+    }
+
+    for (let annotation of blueprint.annotations) {
+      if (
+        !annotation.id ||
+        !annotation.image_id ||
+        !annotation.category_id ||
+        !Array.isArray(annotation.segmentation) ||
+        !("area" in annotation) ||
+        !Array.isArray(annotation.bbox) ||
+        annotation.bbox.length !== 4 ||
+        !("iscrowd" in annotation) ||
+        !annotation.attributes ||
+        !("occluded" in annotation.attributes) ||
+        !("rotation" in annotation.attributes)
+      ) {
+        return { isValid: false, error: "Invalid annotation object structure" };
+      }
+    }
+
+    return { isValid: true };
+  };
+
   const handleSubmit = async () => {
     try {
+      setError(null);
       const cameraData = {
         cameraModel,
         area,
@@ -74,14 +128,27 @@ const CameraDialog = ({ open, handleClose, parkingLotId, cameraToEdit }) => {
         userId,
       };
 
+      let result;
       if (cameraToEdit) {
-        await updateCamera({ id: cameraToEdit._id, ...cameraData }).unwrap();
+        result = await updateCamera({
+          id: cameraToEdit._id,
+          ...cameraData,
+        }).unwrap();
       } else {
-        await addCamera(cameraData).unwrap();
+        result = await addCamera(cameraData).unwrap();
       }
+
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+
       handleClose();
     } catch (error) {
       console.error("Failed to submit camera:", error);
+      setError(
+        error.data?.message || "An error occurred while submitting the camera."
+      );
     }
   };
 
@@ -156,6 +223,11 @@ const CameraDialog = ({ open, handleClose, parkingLotId, cameraToEdit }) => {
             )}
           </Grid>
         </Grid>
+        {error && (
+          <Typography color="error" sx={{ mt: 2 }}>
+            {error}
+          </Typography>
+        )}
       </DialogContent>
       <DialogActions>
         <Button
