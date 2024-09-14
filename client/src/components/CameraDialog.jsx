@@ -51,6 +51,10 @@ const CameraDialog = ({ open, handleClose, parkingLotId, cameraToEdit }) => {
   };
 
   const handleFileUpload = (event) => {
+    // Reset status and error messages before handling new upload
+    setBlueprintStatus(null);
+    setError(null);
+
     const file = event.target.files[0];
     if (file) {
       const reader = new FileReader();
