@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -14,19 +15,29 @@ import securityCameraSvg from "assets/securityCamera.svg";
 
 const CameraCard = ({ camera, onEdit, onDelete }) => {
   const theme = useTheme();
+  const navigate = useNavigate();
+
+  const handleCardClick = () => {
+    navigate(`/camera/${camera._id}`);
+  };
 
   return (
     <Card
       sx={{
-        maxWidth: 300, // Increased from 250 to 300
-        width: "100%",
+        maxWidth: 250, // Increased from 250 to 300
+        minWidth: 170,
         backgroundColor: theme.palette.background.alt,
-        height: "100%",
-        display: "flex",
-        flexDirection: "column",
+
+        display: "grid",
+        gridTemplateRows: "1fr auto",
+        overflow: "hidden",
+        borderRadius: "0.55rem",
+        boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+        transition: "box-shadow 0.5s ease",
       }}
     >
       <CardActionArea
+        onClick={handleCardClick}
         sx={{
           flexGrow: 1,
           display: "flex",
@@ -76,7 +87,16 @@ const CameraCard = ({ camera, onEdit, onDelete }) => {
           </Typography>
         </CardContent>
       </CardActionArea>
-      <CardActions sx={{ justifyContent: "space-between", padding: "16px" }}>
+      <CardActions
+        sx={{
+          justifyContent: "space-between",
+
+          padding: "16px",
+          marginTop: "auto",
+        }}
+      >
+        {" "}
+        {/* Added marginTop: "auto" */}
         <Button
           size="small"
           onClick={() => onEdit(camera)}

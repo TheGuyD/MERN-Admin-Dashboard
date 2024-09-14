@@ -30,14 +30,13 @@ const CameraDialog = ({ open, handleClose, parkingLotId, cameraToEdit }) => {
 
   useEffect(() => {
     if (open) {
+      resetForm(); // Reset the form every time the dialog opens
       if (cameraToEdit) {
         setCameraModel(cameraToEdit.cameraModel);
         setArea(cameraToEdit.area);
         setCameraAddr(cameraToEdit.cameraAddr);
         setBlueprint(cameraToEdit.blueprint);
         setBlueprintStatus("success");
-      } else {
-        resetForm();
       }
     }
   }, [open, cameraToEdit]);

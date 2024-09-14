@@ -22,6 +22,7 @@ import Login from "scenes/login";
 import RequireAuth from "components/RequireAuth";
 import UserInformation from "scenes/userInformation";
 import ParkingLotInfo from "scenes/parkinglotinfo";
+import CameraInfo from 'scenes/cameraInfo';
 
 function App() {
   const mode = useSelector((state) => state.global.mode);
@@ -57,6 +58,7 @@ function App() {
                   />
                   <Route path="/myparkinglots" element={<MyParkingLots />} />
                   <Route path="/parkinglot/:parkingLotId" element={<ParkingLotInfo />} />
+                  <Route path="/camera/:cameraId" element={<CameraInfo />} />
                 </Route>
               </Route>
             </Routes>

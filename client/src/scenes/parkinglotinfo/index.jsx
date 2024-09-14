@@ -8,6 +8,7 @@ import {
   Button,
   IconButton,
   Paper,
+  CircularProgress, // Import CircularProgress
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
@@ -32,12 +33,30 @@ const ParkingLotInfo = () => {
   const userId = useSelector((state) => state.auth.userId);
   const [openCameraDialog, setOpenCameraDialog] = useState(false);
   const [selectedCamera, setSelectedCamera] = useState(null);
-  const { data: parkingLots } = useGetAllParkingLotsByUserIdQuery(userId);
-  const { data: cameras, refetch: refetchCameras } =
-    useGetCamerasQuery(parkingLotId);
+  const { data: parkingLots, isLoading: isLoadingParkingLots } =
+    useGetAllParkingLotsByUserIdQuery(userId);
+  const {
+    data: cameras,
+    refetch: refetchCameras,
+    isLoading: isLoadingCameras,
+  } = useGetCamerasQuery(parkingLotId);
   const [deleteCamera] = useDeleteCameraMutation();
 
   const parkingLot = parkingLots?.find((lot) => lot._id === parkingLotId);
+
+  // Show loading animation if either query is loading
+  if (isLoadingParkingLots || isLoadingCameras) {
+    return (
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh" // Full viewport height
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   if (!parkingLot) {
     return <Typography>Loading...</Typography>;
@@ -127,11 +146,21 @@ const ParkingLotInfo = () => {
             <Grid item xs={12} sm={6}>
               <StatBox
                 title="Operation Hours"
-                value={`${new Date(
-                  parkingLot.operationHours.startingAt
-                ).toLocaleTimeString()} - ${new Date(
-                  parkingLot.operationHours.endingAt
-                ).toLocaleTimeString()}`}
+                value={
+                  <>
+                    {`${new Date(
+                      parkingLot.operationHours.startingAt
+                    ).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })} - ${new Date(
+                      parkingLot.operationHours.endingAt
+                    ).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}`}
+                  </>
+                }
                 icon={
                   <AccessTimeIcon
                     sx={{

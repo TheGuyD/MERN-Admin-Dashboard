@@ -45,6 +45,20 @@ export const dataManagementApi = createApi({
       invalidatesTags: ["Camera"],
     }),
 
+    getCamera: build.query({
+      query: (cameraId) => `camera/getCamera/${cameraId}`,
+      providesTags: ["Camera"],
+    }),
+
+    getCameraDocuments: build.query({
+      query: ({ cameraId, page, pageSize, sort, search }) => ({
+        url: `document/getCameraDocuments/${cameraId}`,
+        method: 'GET',
+        params: { page, pageSize, sort, search },
+      }),
+      providesTags: ["Document"],
+    }),
+
     // ParkingLot Endpoints
     getAllParkingLotsByUserId: build.query({
       query: (userId) => `parkingLot/getAllParkingLotsByUserId/${userId}`,
@@ -195,4 +209,6 @@ export const {
   useUploadPhotoMutation,
   useRetriveImageQuery,
   useCreateParkingLotFolderStructureMutation,
+  useGetCameraQuery,
+  useGetCameraDocumentsQuery,
 } = dataManagementApi;
