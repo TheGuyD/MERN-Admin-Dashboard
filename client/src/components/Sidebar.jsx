@@ -18,14 +18,14 @@ import {
   ChevronRightOutlined,
   HomeOutlined,
   Groups2Outlined,
-  ReceiptLongOutlined,
-  PublicOutlined,
-  PointOfSaleOutlined,
-  TodayOutlined,
-  AdminPanelSettingsOutlined,
-  TrendingUpOutlined,
-  PieChartOutlined,
-  CalendarMonthOutlined,
+  // ReceiptLongOutlined,
+  // PublicOutlined,
+  // PointOfSaleOutlined,
+  // TodayOutlined,
+  // AdminPanelSettingsOutlined,
+  // TrendingUpOutlined,
+  // PieChartOutlined,
+  // CalendarMonthOutlined,
 } from "@mui/icons-material";
 import LocalParkingIcon from "@mui/icons-material/LocalParking";
 import { useEffect, useState } from "react";
@@ -47,49 +47,53 @@ const navItems = [
     icon: <LocalParkingIcon />,
   },
   {
-    text: "Customers",
+    text: "Users",
     icon: <Groups2Outlined />,
   },
-  {
-    text: "Transactions",
-    icon: <ReceiptLongOutlined />,
-  },
-  {
-    text: "Geography",
-    icon: <PublicOutlined />,
-  },
-  {
-    text: "Sales",
-    icon: null,
-  },
-  {
-    text: "Overview",
-    icon: <PointOfSaleOutlined />,
-  },
-  {
-    text: "Daily",
-    icon: <TodayOutlined />,
-  },
-  {
-    text: "Monthly",
-    icon: <CalendarMonthOutlined />,
-  },
-  {
-    text: "Breakdown",
-    icon: <PieChartOutlined />,
-  },
-  {
-    text: "Management",
-    icon: null,
-  },
-  {
-    text: "Admin",
-    icon: <AdminPanelSettingsOutlined />,
-  },
-  {
-    text: "Performance",
-    icon: <TrendingUpOutlined />,
-  },
+  // {
+  //   text: "Customers",
+  //   icon: <Groups2Outlined />,
+  // },
+  // {
+  //   text: "Transactions",
+  //   icon: <ReceiptLongOutlined />,
+  // },
+  // {
+  //   text: "Geography",
+  //   icon: <PublicOutlined />,
+  // },
+  // {
+  //   text: "Sales",
+  //   icon: null,
+  // },
+  // {
+  //   text: "Overview",
+  //   icon: <PointOfSaleOutlined />,
+  // },
+  // {
+  //   text: "Daily",
+  //   icon: <TodayOutlined />,
+  // },
+  // {
+  //   text: "Monthly",
+  //   icon: <CalendarMonthOutlined />,
+  // },
+  // {
+  //   text: "Breakdown",
+  //   icon: <PieChartOutlined />,
+  // },
+  // {
+  //   text: "Management",
+  //   icon: null,
+  // },
+  // {
+  //   text: "Admin",
+  //   icon: <AdminPanelSettingsOutlined />,
+  // },
+  // {
+  //   text: "Performance",
+  //   icon: <TrendingUpOutlined />,
+  // },
 ];
 
 const Sidebar = ({

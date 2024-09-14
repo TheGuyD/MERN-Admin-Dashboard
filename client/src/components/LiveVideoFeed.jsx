@@ -1,7 +1,6 @@
 import React from "react";
 import { Box, Typography, IconButton } from "@mui/material";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import StatBox from "./StatBox";
 
 const LiveVideoFeed = ({ cameraIp }) => {
   const videoUrl = `http://${cameraIp}/video`;
@@ -29,11 +28,11 @@ const LiveVideoFeed = ({ cameraIp }) => {
         src={videoUrl}
         alt="Live Camera Feed"
         style={{
+          borderRadius: "8px", // Corrected border radius for consistency
           width: "100%", // Make the image responsive
           height: "auto", // Maintain aspect ratio
           maxHeight: "400px", // Limit max height
-          objectFit: "contain", // Ensure the image fits within the box
-          borderRadius: "10px",
+          objectFit: "cover", // Ensure the image covers the box without visible edges
         }}
       />
       <IconButton
