@@ -9,8 +9,8 @@ import {
 } from "@mui/icons-material";
 import FlexBetween from "components/FlexBetween";
 import { useDispatch } from "react-redux";
-import { logout } from "state/authSlice";
-import { setMode } from "state/modeSlice";
+import { logout } from "store/index";
+import { setMode } from "store/index";
 import profileImage from "assets/profile.png";
 import {
   AppBar,

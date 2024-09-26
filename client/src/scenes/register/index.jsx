@@ -28,7 +28,7 @@ import {
 import ImageWithTransparentBG from "assets/parkerai.png";
 import AutoFillAwareTextField from "components/AutoFillAwareTextField";
 import ImagePicker from "components/ImagePicker";
-import { setProfileImage } from "state/authSlice";
+import { setProfileImage } from "store/index";
 
 const Register = () => {
   const userRef = useRef();

@@ -1,3 +1,5 @@
+// store/slices/modeSlice.js
+
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
@@ -14,8 +16,6 @@ export const globalSlice = createSlice({
     }
   }
 })
-
-
 
 
 export const { setMode } = globalSlice.actions;

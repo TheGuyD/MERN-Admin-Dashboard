@@ -19,7 +19,7 @@ import ImageWithTransparentBG from "assets/ParkerAi-login.png";
 import AutoFillAwareTextField from "components/AutoFillAwareTextField";
 import { useRetriveImageQuery } from "state/dataManagementApi";
 import { useDispatch } from "react-redux";
-import { setProfileImage } from "state/authSlice";
+import { setProfileImage } from "store/index";
 const Login = () => {
   const { setAuth } = useAuth();
   const theme = useTheme();

@@ -24,7 +24,7 @@ import {
 } from "state/dataManagementApi";
 import Header from "components/Header";
 import ImagePicker from "components/ImagePicker";
-import { setProfileImage } from "state/authSlice";
+import { setProfileImage } from "store/index";
 
 const UserInformation = () => {
   const location = useLocation();

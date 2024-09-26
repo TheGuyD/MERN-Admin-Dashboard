@@ -1,6 +1,6 @@
 import { useSelector, useDispatch } from 'react-redux';
 import { useDebugValue } from 'react';
-import { setAuth, logout } from 'state/authSlice'; // Import your actions
+import { setAuth, logout } from 'store/index'; // Import your actions
 
 const useAuth = () => {
   const auth = useSelector((state) => state.auth);
