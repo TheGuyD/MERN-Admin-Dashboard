@@ -20,15 +20,16 @@ import {
   PHONE_REGEX,
   NAME_REGEX,
 } from "helpers/validations";
-import { useSignupMutation } from "state/authApi";
+import { useSignupMutation } from "store/index";
 import {
   useCreateUserFolderStructureMutation,
   useUploadPhotoMutation,
-} from "state/dataManagementApi";
+} from "store/index";
 import ImageWithTransparentBG from "assets/parkerai.png";
 import AutoFillAwareTextField from "components/AutoFillAwareTextField";
 import ImagePicker from "components/ImagePicker";
 import { setProfileImage } from "store/index";
+import imageCompression from "browser-image-compression";
 
 const Register = () => {
   const userRef = useRef();
@@ -186,8 +187,22 @@ const Register = () => {
 
       if (avatar) {
         try {
+          // Compression options
+          const options = {
+            maxSizeMB: 1, // Set maximum size to 1 MB
+            maxWidthOrHeight: 1920, // Set maximum width or height
+            useWebWorker: true, // Use web worker for better performance
+            fileType: "image/webp", // Convert to WebP
+          };
+
+          // Compress and convert the image
+          const compressedFile = await imageCompression(
+            parkingLotData.avatar,
+            options
+          );
+
           const uploadResponse = await uploadPhoto({
-            image: avatar,
+            image: compressedFile,
             path: `${response.userId}/userinformation`,
           });
 

@@ -3,7 +3,7 @@ import { Box, useTheme } from "@mui/material";
 import Header from "components/Header";
 import { ResponsiveChoropleth } from "@nivo/geo";
 import { geoData } from "state/geoData";
-import { useGetGeographyQuery } from "state/api";
+import { useGetGeographyQuery } from "store/api";
 
 const Geography = () => {
   const theme = useTheme();

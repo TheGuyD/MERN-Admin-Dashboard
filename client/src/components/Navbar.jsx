@@ -25,7 +25,7 @@ import {
   Box,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom"; // Import useNavigate for navigation
-import { useLogoutMutation } from "state/authApi"; // Adjust the import path as necessary
+import { useLogoutMutation } from "store/index"; // Adjust the import path as necessary
 
 const Navbar = ({ profileImageUrl, user, isSidebarOpen, setIsSidebarOpen }) => {
   const dispatch = useDispatch();

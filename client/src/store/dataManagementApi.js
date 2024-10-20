@@ -1,12 +1,15 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 export const dataManagementApi = createApi({
+  // fetchBaseQuery creating a pre-configured version of fetch api
   baseQuery: fetchBaseQuery({
+    // reducerPath String will be a field Name inside the MOTHER OF ALL STATES
+    reducerPath: "adminApi",
     baseUrl: "http://localhost:3000/data-management/",
-    credentials: 'include',
+    credentials: "include",
   }),
   reducerPath: "dataManagementApi",
-  tagTypes: ["Camera", "ParkingLot", "Document", "User"],
+  tagTypes: ["Camera", "ParkingLot", "Document", "User", "SchedulerTask"],
   endpoints: (build) => ({
     // Camera Endpoints
     getCameras: build.query({
@@ -15,8 +18,8 @@ export const dataManagementApi = createApi({
     }),
     addCamera: build.mutation({
       query: (newCamera) => ({
-        url: 'camera/addCamera',
-        method: 'POST',
+        url: "camera/addCamera",
+        method: "POST",
         body: newCamera,
       }),
       invalidatesTags: ["Camera"],
@@ -24,17 +27,17 @@ export const dataManagementApi = createApi({
     updateCamera: build.mutation({
       query: (updatedCamera) => ({
         url: `camera/updateCamera/${updatedCamera.id}`,
-        method: 'PUT',
+        method: "PUT",
         body: updatedCamera,
       }),
-      invalidatesTags: ['Camera'],
+      invalidatesTags: ["Camera"],
     }),
     deleteCamera: build.mutation({
       query: (cameraId) => ({
         url: `camera/deleteCamera/${cameraId}`,
-        method: 'DELETE',
+        method: "DELETE",
       }),
-      invalidatesTags: ['Camera'],
+      invalidatesTags: ["Camera"],
     }),
     removeCamera: build.mutation({
       query: (cameraId) => ({
@@ -50,14 +53,26 @@ export const dataManagementApi = createApi({
       providesTags: ["Camera"],
     }),
 
+    removeCameraDocs: build.mutation({
+      query: ({cameraId, date}) => ({
+        url: `camera/removeCameraDocs/${cameraId}`,
+        method: "DELETE",
+        body: {
+          date,
+        },
+      }),
+      invalidatesTags: ["Camera"],
+    }),
+
     getCameraDocuments: build.query({
       query: ({ cameraId, page, pageSize, sort, search }) => ({
         url: `document/getCameraDocuments/${cameraId}`,
-        method: 'GET',
+        method: "GET",
         params: { page, pageSize, sort, search },
       }),
       providesTags: ["Document"],
     }),
+
 
     // ParkingLot Endpoints
     getAllParkingLotsByUserId: build.query({
@@ -184,6 +199,23 @@ export const dataManagementApi = createApi({
         body: { imageName, requestedPath: path },
       }),
     }),
+
+    // SchedulerTask Endpoint
+    saveSchedulerTask: build.mutation({
+      query: (query) => ({
+        url: "schedulerTask/saveSchedulerTask",
+        method: "POST",
+        body: {
+          query,
+        },
+      }),
+    }),
+    deleteSchedulerTask: build.mutation({
+      query: (parkingLotId) => ({
+        url: `schedulerTask/deleteSchedulerTask/${parkingLotId}`,
+        method: "DELETE",
+      }),
+    }),
   }),
 });
 
@@ -192,15 +224,16 @@ export const {
   useAddCameraMutation,
   useUpdateCameraMutation,
   useDeleteCameraMutation,
-  useRemoveCameraMutation,
+  useRemoveCameraMutation, // TODO: why this is not in use ?
+  useRemoveCameraDocsMutation,
   useGetAllParkingLotsByUserIdQuery,
   useAddParkingLotMutation,
   useUpdateParkingLotMutation,
   useDeleteParkingLotMutation,
-  useGetDocumentsQuery,
-  useAddDocumentMutation,
-  useUpdateDocumentMutation,
-  useDeleteDocumentMutation,
+  useGetDocumentsQuery, // TODO: why this is not in use ?
+  useAddDocumentMutation, // TODO: why this is not in use ?
+  useUpdateDocumentMutation, // TODO: why this is not in use ?
+  useDeleteDocumentMutation, // TODO: why this is not in use ?
   useGetUsersQuery,
   useUpdateUserMutation,
   useDeleteUserMutation,
@@ -208,7 +241,9 @@ export const {
   useCreateUserFolderStructureMutation,
   useUploadPhotoMutation,
   useRetriveImageQuery,
-  useCreateParkingLotFolderStructureMutation,
+  useCreateParkingLotFolderStructureMutation, // TODO: why this is not in use ?
   useGetCameraQuery,
   useGetCameraDocumentsQuery,
+  useSaveSchedulerTaskMutation,
+  useDeleteSchedulerTaskMutation,
 } = dataManagementApi;

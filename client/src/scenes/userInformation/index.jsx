@@ -21,10 +21,12 @@ import {
   useDeleteUserMutation,
   useRetriveImageQuery,
   useUploadPhotoMutation,
-} from "state/dataManagementApi";
+} from "store/index";
 import Header from "components/Header";
 import ImagePicker from "components/ImagePicker";
 import { setProfileImage } from "store/index";
+import imageCompression from 'browser-image-compression';
+
 
 const UserInformation = () => {
   const location = useLocation();
@@ -55,7 +57,7 @@ const UserInformation = () => {
 
   // Retrieve the user's current profile image
   const { data: imageData } = useRetriveImageQuery({
-    imageName: "profile.png",
+    imageName: "profile.webp",
     path: `${user._id}/userinformation`,
   });
   const [updateUserInformation] = useUpdateUserMutation();
@@ -131,8 +133,19 @@ const UserInformation = () => {
 
       // If a new avatar is selected, upload it
       if (selectedFile) {
+        // Compression options
+        const options = {
+          maxSizeMB: 1, // Set maximum size to 1 MB
+          maxWidthOrHeight: 1920, // Set maximum width or height
+          useWebWorker: true, // Use web worker for better performance
+          fileType: "image/webp", // Convert to WebP
+        };
+        
+        // Compress and convert the image
+        const compressedFile = await imageCompression(selectedFile, options);
+
         const uploadResponse = await uploadImage({
-          image: selectedFile,
+          image: compressedFile,
           path: `${user._id}/userinformation`,
         });
 

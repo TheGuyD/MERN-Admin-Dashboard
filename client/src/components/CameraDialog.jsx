@@ -13,7 +13,7 @@ import {
 import {
   useAddCameraMutation,
   useUpdateCameraMutation,
-} from "state/dataManagementApi";
+} from "store/index";
 import { useSelector } from "react-redux";
 
 const CameraDialog = ({ open, handleClose, parkingLotId, cameraToEdit }) => {
@@ -28,15 +28,30 @@ const CameraDialog = ({ open, handleClose, parkingLotId, cameraToEdit }) => {
   const [updateCamera] = useUpdateCameraMutation();
   const userId = useSelector((state) => state.auth.userId);
 
+  // State variables to store initial values
+  const [initialCameraModel, setInitialCameraModel] = useState("");
+  const [initialArea, setInitialArea] = useState("");
+  const [initialCameraAddr, setInitialCameraAddr] = useState("");
+  const [initialBlueprint, setInitialBlueprint] = useState(null);
+
   useEffect(() => {
     if (open) {
-      resetForm(); // Reset the form every time the dialog opens
       if (cameraToEdit) {
-        setCameraModel(cameraToEdit.cameraModel);
-        setArea(cameraToEdit.area);
-        setCameraAddr(cameraToEdit.cameraAddr);
-        setBlueprint(cameraToEdit.blueprint);
-        setBlueprintStatus("success");
+        // Editing an existing camera
+        setCameraModel(cameraToEdit.cameraModel || "");
+        setArea(cameraToEdit.area || "");
+        setCameraAddr(cameraToEdit.cameraAddr || "");
+        setBlueprint(cameraToEdit.blueprint || null);
+        setBlueprintStatus(cameraToEdit.blueprint ? "success" : null);
+
+        // Set initial values
+        setInitialCameraModel(cameraToEdit.cameraModel || "");
+        setInitialArea(cameraToEdit.area || "");
+        setInitialCameraAddr(cameraToEdit.cameraAddr || "");
+        setInitialBlueprint(cameraToEdit.blueprint || null);
+      } else {
+        // Adding a new camera
+        resetForm();
       }
     }
   }, [open, cameraToEdit]);
@@ -48,6 +63,12 @@ const CameraDialog = ({ open, handleClose, parkingLotId, cameraToEdit }) => {
     setBlueprint(null);
     setBlueprintStatus(null);
     setError(null);
+
+    // Reset initial values
+    setInitialCameraModel("");
+    setInitialArea("");
+    setInitialCameraAddr("");
+    setInitialBlueprint(null);
   };
 
   const handleFileUpload = (event) => {
@@ -122,28 +143,59 @@ const CameraDialog = ({ open, handleClose, parkingLotId, cameraToEdit }) => {
   const handleSubmit = async () => {
     try {
       setError(null);
-      const cameraData = {
-        cameraModel,
-        area,
-        cameraAddr,
-        blueprint,
-        parkingLotId,
-        userId,
-      };
 
-      let result;
       if (cameraToEdit) {
-        result = await updateCamera({
-          id: cameraToEdit._id,
-          ...cameraData,
-        }).unwrap();
-      } else {
-        result = await addCamera(cameraData).unwrap();
-      }
+        // We're updating an existing camera
+        const updateData = {};
 
-      if (result.error) {
-        setError(result.error);
-        return;
+        if (cameraModel !== initialCameraModel) {
+          updateData.cameraModel = cameraModel;
+        }
+        if (area !== initialArea) {
+          updateData.area = area;
+        }
+        if (cameraAddr !== initialCameraAddr) {
+          updateData.cameraAddr = cameraAddr;
+        }
+
+        // For blueprint, perform a deep comparison
+        if (JSON.stringify(blueprint) !== JSON.stringify(initialBlueprint)) {
+          updateData.blueprint = blueprint;
+        }
+
+        // Include the camera ID
+        updateData.id = cameraToEdit._id;
+
+        // Only proceed if there are changes (excluding 'id')
+        if (Object.keys(updateData).length > 1) {
+          const result = await updateCamera(updateData).unwrap();
+
+          if (result.error) {
+            setError(result.error);
+            return;
+          }
+        } else {
+          // No changes detected
+          handleClose();
+          return;
+        }
+      } else {
+        // We're adding a new camera
+        const cameraData = {
+          cameraModel,
+          area,
+          cameraAddr,
+          blueprint,
+          parkingLotId,
+          userId,
+        };
+
+        const result = await addCamera(cameraData).unwrap();
+
+        if (result.error) {
+          setError(result.error);
+          return;
+        }
       }
 
       handleClose();
@@ -246,12 +298,15 @@ const CameraDialog = ({ open, handleClose, parkingLotId, cameraToEdit }) => {
         </Button>
         <Button
           onClick={handleSubmit}
-          disabled={!cameraModel || !area || !cameraAddr || !blueprint}
+          disabled={
+            (!cameraModel || !area || !cameraAddr || !blueprint) &&
+            !cameraToEdit
+          }
           sx={{
             color:
               theme.palette.mode === "dark"
                 ? theme.palette.common.white
-                : theme.palette.primary.dark, // Changed to primary.dark for better visibility in light mode
+                : theme.palette.primary.dark,
             "&:disabled": {
               color:
                 theme.palette.mode === "dark"

@@ -1,6 +1,6 @@
 import React from "react";
 import { Search } from "@mui/icons-material";
-import { IconButton, TextField, InputAdornment } from "@mui/material";
+import { IconButton, TextField, InputAdornment, Button } from "@mui/material";
 import {
   GridToolbarDensitySelector,
   GridToolbarContainer,
@@ -14,6 +14,7 @@ const DataGridCustomToolbar = ({
   setSearchInput,
   setSearch,
   handleExport,
+  handleRemoveRows,
 }) => {
   return (
     <GridToolbarContainer>
@@ -22,6 +23,16 @@ const DataGridCustomToolbar = ({
           <GridToolbarColumnsButton />
           <GridToolbarDensitySelector />
           <GridToolbarExport csvOptions={{ allColumns: true }} />
+          {handleRemoveRows && (
+            <Button
+              variant="contained"
+              color="secondary"
+              onClick={handleRemoveRows}
+              sx={{ ml: 1 }}
+            >
+              Remove Rows
+            </Button>
+          )}
         </FlexBetween>
         <TextField
           label="Search..."

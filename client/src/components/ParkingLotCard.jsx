@@ -13,15 +13,34 @@ import {
   IconButton,
   Menu,
   MenuItem,
+  Switch, // Import Switch component
+  FormControlLabel, // Import FormControlLabel for the switch label
+  Box,
 } from "@mui/material";
 import MenuOpenRoundedIcon from "@mui/icons-material/MenuOpenRounded";
 import placeHolderImage from "assets/parkingLot.png";
 import {
   useRetriveImageQuery,
   useDeleteParkingLotMutation,
-} from "state/dataManagementApi";
+  useGetCamerasQuery, // Import the hook to fetch cameras
+  useScheduleTaskMutation,
+  useCancelTaskMutation,
+  useUpdateParkingLotMutation,
+  useSaveSchedulerTaskMutation,
+  useDeleteSchedulerTaskMutation,
+} from "store/index";
 import { useSelector } from "react-redux";
 import FlexBetween from "components/FlexBetween";
+
+const daysOfWeek = [
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+  "sunday",
+];
 
 const ParkingLotCard = ({
   _id,
@@ -36,6 +55,8 @@ const ParkingLotCard = ({
   handleExpandClick,
   handleEdit,
   imageUpdated, // New prop to force image refetch
+  updateInterval, // Add updateInterval as a prop
+  isCapture,
 }) => {
   const theme = useTheme();
   const [deleteParkingLot] = useDeleteParkingLotMutation();
@@ -44,16 +65,49 @@ const ParkingLotCard = ({
   const maxRetries = 3;
   const navigate = useNavigate();
 
+  // State for the Active Monitoring switch
+  const [activeMonitoring, setActiveMonitoring] = useState(isCapture);
+
+  // Hooks from schedulerServiceApi
+  const [scheduleTask, { isLoading: isScheduling }] = useScheduleTaskMutation();
+  const [cancelTask, { isLoading: isCancelling }] = useCancelTaskMutation();
+  const [
+    saveSchedulerTask,
+    { isLoading: isSavingSchedulerTask },
+  ] = useSaveSchedulerTaskMutation();
+  const [
+    deleteSchedulerTask,
+    { isLoading: isDeletingSchedulerTask },
+  ] = useDeleteSchedulerTaskMutation();
+
+  // Hooks from data-management
+  const [
+    updateParkingLot,
+    { isLoading: isUpdatingParkingLot },
+  ] = useUpdateParkingLotMutation();
+
+  // Fetch cameras associated with the parking lot
+  const {
+    data: camerasData,
+    isLoading: isLoadingCameras,
+    error: camerasError,
+  } = useGetCamerasQuery(_id);
+
+  const cameras = camerasData || [];
+
   const {
     data: imageData,
     error,
-    refetch: refetchImage, // Use this to force refetch the image
+    refetch: refetchImage,
   } = useRetriveImageQuery({
-    imageName: "profile.png",
+    imageName: "profile.webp",
     path: `${userId}/myparkinglots/${_id}`,
   });
 
   const imageUrl = imageData?.downloadURL || placeHolderImage;
+
+  const isProcessing =
+  isUpdatingParkingLot;
 
   // Refetch the image when the parent component notifies about an update
   useEffect(() => {
@@ -73,6 +127,10 @@ const ParkingLotCard = ({
       return () => clearTimeout(timer);
     }
   }, [error, retryAttempt, refetchImage]);
+
+  useEffect(() => {
+    setActiveMonitoring(isCapture);
+  }, [isCapture]);
 
   const [anchorEl, setAnchorEl] = useState(null);
   const openMenu = Boolean(anchorEl);
@@ -96,7 +154,8 @@ const ParkingLotCard = ({
         parkingLotId: _id,
         ownerUserId: userId,
       }).unwrap();
-      console.log("Parking lot deleted successfully");
+      await deleteSchedulerTask(_id).unwarp();
+      console.log("Parking lot deleted successfully and its schedulerTasks");
     } catch (error) {
       console.error("Failed to delete parking lot", error);
     }
@@ -105,6 +164,68 @@ const ParkingLotCard = ({
 
   const handleCardClick = () => {
     navigate(`/parkinglot/${_id}`);
+  };
+
+  // Handle Active Monitoring Switch Change
+  const handleActiveMonitoringChange = async (event) => {
+    const isChecked = event.target.checked;
+    setActiveMonitoring(isChecked);
+
+    if (isChecked) {
+      // Prepare data for scheduling
+      if (!cameras || cameras.length === 0) {
+        console.error("No cameras available for this parking lot.");
+        return;
+      }
+
+      const preparedCameras = cameras.map((camera) => ({
+        cameraId: camera._id,
+        cameraUrl: camera.cameraAddr,
+      }));
+      let intervalTime = `${updateInterval}s`;
+      if (updateInterval < 1) {
+        // If interval is less than 1 second, convert to seconds
+        intervalTime = `${Math.round(updateInterval * 60)}s`;
+      }
+
+      const requestBody = {
+        parkingLotId: _id,
+        operationHours,
+        intervalTime,
+        cameras: preparedCameras,
+      };
+
+      try {
+        await scheduleTask(requestBody).unwrap();
+        await updateParkingLot({
+          parkingLotId: _id,
+          ownerUserId: userId,
+          isCapture: isChecked,
+        }).unwrap();
+        await saveSchedulerTask(requestBody).unwrap();
+        console.log("Task scheduled successfully.", requestBody);
+      } catch (error) {
+        console.error("Failed to schedule task:", requestBody);
+        // Optionally, revert the switch state
+        setActiveMonitoring(false);
+      }
+    } else {
+      // Cancel the scheduled task
+      try {
+        await cancelTask(_id).unwrap();
+        await updateParkingLot({
+          parkingLotId: _id,
+          ownerUserId: userId,
+          isCapture: isChecked,
+        }).unwrap();
+        await deleteSchedulerTask(_id).unwrap();
+        console.log("Task cancelled successfully.");
+      } catch (error) {
+        console.error("Failed to cancel task:", error);
+        // Optionally, revert the switch state
+        setActiveMonitoring(true);
+      }
+    }
   };
 
   return (
@@ -148,31 +269,58 @@ const ParkingLotCard = ({
           </Typography>
         </CardContent>
       </CardActionArea>
-      <CardActions>
-        <Button
-          variant="primary"
-          size="small"
-          onClick={() => handleExpandClick(_id)}
-          sx={{ minWidth: "100px" }}
+      <CardActions
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-start",
+        }}
+      >
+        {/* Active Monitoring Switch */}
+        <FormControlLabel
+          control={
+            <Switch
+              checked={activeMonitoring}
+              onChange={handleActiveMonitoringChange}
+              color="primary"
+              disabled={isProcessing}
+              />
+          }
+          label="Active Monitoring"
+          sx={{ mb: 1 }}
+        />
+        <Box
+          sx={{
+            display: "flex",
+            width: "100%",
+            alignItems: "center",
+          }}
         >
-          {isExpanded ? "See Less" : "See More"}
-        </Button>
-        <FlexBetween sx={{ width: "100%" }} />
-        <IconButton
-          aria-label="settings"
-          onClick={handleMenuOpen}
-          sx={{ ml: "auto" }}
-        >
-          <MenuOpenRoundedIcon />
-        </IconButton>
-        <Menu anchorEl={anchorEl} open={openMenu} onClose={handleMenuClose}>
-          <MenuItem onClick={onEdit}>Edit</MenuItem>
-          <MenuItem onClick={handleDelete}>Delete</MenuItem>
-        </Menu>
+          <Button
+            variant="primary"
+            size="small"
+            onClick={() => handleExpandClick(_id)}
+            sx={{ minWidth: "100px" }}
+          >
+            {isExpanded ? "See Less" : "See More"}
+          </Button>
+          <FlexBetween sx={{ width: "100%" }} />
+          <IconButton
+            aria-label="settings"
+            onClick={handleMenuOpen}
+            sx={{ ml: "auto" }}
+          >
+            <MenuOpenRoundedIcon />
+          </IconButton>
+          <Menu anchorEl={anchorEl} open={openMenu} onClose={handleMenuClose}>
+            <MenuItem onClick={onEdit}>Edit</MenuItem>
+            <MenuItem onClick={handleDelete}>Delete</MenuItem>
+          </Menu>
+        </Box>
       </CardActions>
       <Collapse in={isExpanded} timeout="auto" unmountOnExit>
         <CardContent>
-          <Typography>id: {_id}</Typography>
+          <Typography>ID: {_id}</Typography>
           <Typography>Total Slots: {numberOfParkingSlot}</Typography>
           <Typography>
             Currently Occupied Slots: {sumCurrOcupiedSlots}
@@ -180,11 +328,24 @@ const ParkingLotCard = ({
           <Typography>
             Monthly Estimated Revenue: ${monthlyEstimatedRevenue.toFixed(2)}
           </Typography>
-          <Typography>
-            Operation Hours:{" "}
-            {new Date(operationHours.startingAt).toLocaleTimeString()} -{" "}
-            {new Date(operationHours.endingAt).toLocaleTimeString()}
+          <Typography variant="h6" sx={{ mt: 2 }}>
+            Operation Hours:
           </Typography>
+          {daysOfWeek.map((day) => {
+            const dayData = operationHours[day];
+            const displayDay = day.charAt(0).toUpperCase() + day.slice(1);
+            if (dayData) {
+              const startingAt = dayData.startingAt;
+              const endingAt = dayData.endingAt;
+              return (
+                <Typography key={day}>
+                  {displayDay}: {startingAt} - {endingAt}
+                </Typography>
+              );
+            } else {
+              return <Typography key={day}>{displayDay}: Closed</Typography>;
+            }
+          })}
         </CardContent>
       </Collapse>
     </Card>

@@ -9,9 +9,45 @@ import authReducer, {
 import { persistStore, persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 import { setupListeners } from "@reduxjs/toolkit/query";
-import { api } from "state/api";
-import { authApi } from "state/authApi";
-import { dataManagementApi } from "state/dataManagementApi"; // Import your dataManagementApi
+import { api } from "store/api";
+import {
+  authApi,
+  useSignupMutation,
+  useLoginMutation,
+  useRefreshQuery,
+  useLogoutMutation,
+} from "store/authApi";
+import {
+  dataManagementApi,
+  useGetCamerasQuery,
+  useAddCameraMutation,
+  useUpdateCameraMutation,
+  useDeleteCameraMutation,
+  useRemoveCameraMutation,
+  useRemoveCameraDocsMutation,
+  useGetAllParkingLotsByUserIdQuery,
+  useAddParkingLotMutation,
+  useUpdateParkingLotMutation,
+  useDeleteParkingLotMutation,
+  useGetDocumentsQuery,
+  useAddDocumentMutation,
+  useUpdateDocumentMutation,
+  useDeleteDocumentMutation,
+  useGetUsersQuery,
+  useUpdateUserMutation,
+  useDeleteUserMutation,
+  useGetUserInformationQuery,
+  useCreateUserFolderStructureMutation,
+  useUploadPhotoMutation,
+  useRetriveImageQuery,
+  useCreateParkingLotFolderStructureMutation,
+  useGetCameraQuery,
+  useGetCameraDocumentsQuery,
+  useSaveSchedulerTaskMutation,
+  useDeleteSchedulerTaskMutation
+} from "store/dataManagementApi"; // Import your dataManagementApi
+
+import { useScheduleTaskMutation , useCancelTaskMutation , schedulerServiceApi } from "store/schedulerServiceApi"
 
 // Configuration for redux-persist
 const persistConfig = {
@@ -31,6 +67,7 @@ const rootReducer = combineReducers({
   [api.reducerPath]: api.reducer,
   [authApi.reducerPath]: authApi.reducer,
   [dataManagementApi.reducerPath]: dataManagementApi.reducer, // Manages data management API state
+  [schedulerServiceApi.reducerPath]: schedulerServiceApi.reducer
 });
 
 // Create a persisted reducer
@@ -41,7 +78,7 @@ const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: false, // Required to avoid issues with redux-persist
-    }).concat(api.middleware, authApi.middleware, dataManagementApi.middleware), // Add the dataManagementApi middleware
+    }).concat(api.middleware, authApi.middleware, dataManagementApi.middleware, schedulerServiceApi.middleware), // Add the dataManagementApi middleware
 });
 
 const persistor = persistStore(store);
@@ -50,3 +87,41 @@ setupListeners(store.dispatch);
 
 export { store, persistor };
 export { setAuth, logout, setProfileImage, setMode };
+export {
+  useSignupMutation,
+  useLoginMutation,
+  useRefreshQuery, // TODO: why this is not in use ?
+  useLogoutMutation,
+};
+
+export {
+  useGetCamerasQuery,
+  useAddCameraMutation,
+  useUpdateCameraMutation,
+  useDeleteCameraMutation,
+  useRemoveCameraMutation, // TODO: why this is not in use ?
+  useRemoveCameraDocsMutation,
+  useGetAllParkingLotsByUserIdQuery,
+  useAddParkingLotMutation,
+  useUpdateParkingLotMutation,
+  useDeleteParkingLotMutation,
+  useGetDocumentsQuery,// TODO: why this is not in use ?
+  useAddDocumentMutation, // TODO: why this is not in use ?
+  useUpdateDocumentMutation, // TODO: why this is not in use ?
+  useDeleteDocumentMutation, // TODO: why this is not in use ?
+  useGetUsersQuery,
+  useUpdateUserMutation,
+  useDeleteUserMutation,
+  useGetUserInformationQuery,
+  useCreateUserFolderStructureMutation,
+  useUploadPhotoMutation,
+  useRetriveImageQuery,
+  useCreateParkingLotFolderStructureMutation, // TODO: why this is not in use ?
+  useGetCameraQuery,
+  useGetCameraDocumentsQuery,
+  useSaveSchedulerTaskMutation,
+  useDeleteSchedulerTaskMutation
+};
+
+export { useScheduleTaskMutation , useCancelTaskMutation }
+

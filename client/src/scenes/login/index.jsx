@@ -14,10 +14,10 @@ import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { EMAIL_REGEX, PWD_REGEX } from "helpers/validations";
 import { Link, useNavigate, useLocation, Navigate } from "react-router-dom";
 import useAuth from "hooks/useAuth";
-import { useLoginMutation } from "state/authApi";
+import { useLoginMutation } from "store/index";
 import ImageWithTransparentBG from "assets/ParkerAi-login.png";
 import AutoFillAwareTextField from "components/AutoFillAwareTextField";
-import { useRetriveImageQuery } from "state/dataManagementApi";
+import { useRetriveImageQuery } from "store/index";
 import { useDispatch } from "react-redux";
 import { setProfileImage } from "store/index";
 const Login = () => {

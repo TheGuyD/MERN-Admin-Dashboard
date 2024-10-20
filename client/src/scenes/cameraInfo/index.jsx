@@ -7,6 +7,7 @@ import {
   IconButton,
   CircularProgress,
   Collapse,
+  TextField, // Added for date picker
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -17,10 +18,16 @@ import { DataGrid } from "@mui/x-data-grid";
 import {
   useGetCameraQuery,
   useGetCameraDocumentsQuery,
-} from "state/dataManagementApi";
+  useRemoveCameraDocsMutation, // Added mutation hook
+} from "store/index";
 import { format } from "date-fns";
 import { useTheme } from "@mui/material/styles";
 import LiveVideoFeed from "components/LiveVideoFeed";
+import RemoveRowsDialog from "components/RemoveRowsDialog"; // New component
+import ConfirmationDialog from "components/ConfirmationDialog"; // New component
+
+// Date picker import
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 
 const CameraInfo = () => {
   const theme = useTheme();
@@ -38,6 +45,15 @@ const CameraInfo = () => {
     {}
   );
 
+  // State for Remove Rows functionality
+  const [removeRowsDialogOpen, setRemoveRowsDialogOpen] = useState(false);
+  const [confirmationDialogOpen, setConfirmationDialogOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(null);
+
+  // Mutation hook for removing camera documents
+  const [removeCameraDocs, { isLoading: isRemovingDocs }] =
+    useRemoveCameraDocsMutation();
+
   const {
     data: camera,
     isLoading: isCameraLoading,
@@ -47,6 +63,7 @@ const CameraInfo = () => {
     data: documents,
     isLoading: isDocumentsLoading,
     error: documentsError,
+    refetch: refetchDocuments, // Added for refetching after deletion
   } = useGetCameraDocumentsQuery({
     cameraId,
     page: paginationModel.page,
@@ -69,8 +86,29 @@ const CameraInfo = () => {
     }));
   };
 
-  const filteredRows = documents?.documents.filter(
-    (doc) => doc._id.includes(search) // Adjust this condition based on your search criteria
+  // Handler to open the Remove Rows dialog
+  const handleRemoveRows = () => {
+    setRemoveRowsDialogOpen(true);
+  };
+
+  // Handler to delete documents
+  const handleDeleteDocuments = async () => {
+    if (!selectedDate) return;
+    try {
+      await removeCameraDocs({
+        cameraId,
+        date: selectedDate.toISOString(),
+      }).unwrap();
+      refetchDocuments(); // Refresh documents after deletion
+      setSelectedDate(null); // Reset the selected date
+    } catch (error) {
+      console.error("Failed to remove documents:", error);
+      // Optionally, display an error message to the user
+    }
+  };
+
+  const filteredRows = documents?.documents.filter((doc) =>
+    doc._id.includes(search)
   );
 
   const columns = [
@@ -186,10 +224,16 @@ const CameraInfo = () => {
               {renderBlueprintSection(`${section}-${index}`, item)}
             </Box>
           ))
+        ) : typeof content === "object" && content !== null ? (
+          Object.entries(content).map(([subKey, subValue]) => (
+            <Box key={subKey} ml={2}>
+              {renderBlueprintSection(subKey, subValue)}
+            </Box>
+          ))
         ) : (
-          <pre style={{ whiteSpace: "pre-wrap", wordWrap: "break-word" }}>
-            {JSON.stringify(content, null, 2)}
-          </pre>
+          <Typography variant="body2" ml={2}>
+            {String(content)}
+          </Typography>
         )}
       </Collapse>
     </Box>
@@ -212,6 +256,27 @@ const CameraInfo = () => {
           <ArrowBackIcon />
         </IconButton>
       </Box>
+
+      {/* Include the Remove Rows and Confirmation dialogs */}
+      <RemoveRowsDialog
+        open={removeRowsDialogOpen}
+        onClose={() => setRemoveRowsDialogOpen(false)}
+        onConfirm={() => {
+          setConfirmationDialogOpen(true);
+        }}
+        selectedDate={selectedDate}
+        setSelectedDate={setSelectedDate}
+      />
+      <ConfirmationDialog
+        open={confirmationDialogOpen}
+        onClose={() => setConfirmationDialogOpen(false)}
+        onConfirm={async () => {
+          setConfirmationDialogOpen(false);
+          await handleDeleteDocuments();
+        }}
+        isLoading={isRemovingDocs}
+      />
+
       <Grid container spacing={4}>
         <Grid item xs={12} md={5}>
           <Grid container spacing={2}>
@@ -275,16 +340,15 @@ const CameraInfo = () => {
         <Grid item xs={12} md={7}>
           <Box display="flex" flexDirection="column" height="100%">
             <Box flexGrow={1} height="calc(100vh - 200px)">
-              {" "}
               {/* Set a fixed height */}
               <DataGrid
                 sx={{
-                  height: "100%", // Make DataGrid fill the container
+                  height: "100%",
                   "& .MuiDataGrid-root": {
                     border: "none",
                   },
                   "& .MuiDataGrid-cell": {
-                    borderBottom: `1px solid ${theme.palette.secondary[200]}`, // Use theme divider color
+                    borderBottom: `1px solid ${theme.palette.secondary[200]}`,
                   },
                   "& .MuiDataGrid-columnHeaders": {
                     backgroundColor: theme.palette.background.alt,
@@ -305,7 +369,7 @@ const CameraInfo = () => {
                 }}
                 loading={isDocumentsLoading}
                 getRowId={(row) => row._id}
-                rows={filteredRows || []} // Use filtered rows
+                rows={filteredRows || []}
                 columns={columns}
                 rowCount={documents?.total || 0}
                 paginationModel={paginationModel}
@@ -328,12 +392,13 @@ const CameraInfo = () => {
                     setSearchInput,
                     setSearch,
                     handleExport: () => {},
+                    handleRemoveRows, // Pass the handler to show the Remove Rows button
                   },
                 }}
                 onRowClick={handleRowClick}
                 getRowHeight={() => "auto"}
                 rowHeight={undefined}
-                density="compact" // Add this line
+                density="compact"
               />
             </Box>
           </Box>

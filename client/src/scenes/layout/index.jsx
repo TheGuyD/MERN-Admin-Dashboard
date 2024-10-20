@@ -6,7 +6,7 @@ import Navbar from "components/Navbar";
 import Sidebar from "components/Sidebar";
 import {
   useGetUserInformationQuery,
-} from "state/dataManagementApi";
+} from "store/index";
 
 const Layout = () => {
   const isNonMobile = useMediaQuery("(min-width: 600px)");

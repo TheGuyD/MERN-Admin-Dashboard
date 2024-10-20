@@ -9,8 +9,9 @@ import {
   useCreateUserFolderStructureMutation,
   useUploadPhotoMutation,
   useUpdateParkingLotMutation,
-} from "state/dataManagementApi";
+} from "store/index";
 import { useSelector } from "react-redux";
+import imageCompression from 'browser-image-compression';
 
 const MyParkingLots = () => {
   const [open, setOpen] = useState(false);
@@ -24,6 +25,7 @@ const MyParkingLots = () => {
   const isNonMobile = useMediaQuery("(min-width:1000px)");
   const [parkingLotToEdit, setParkingLotToEdit] = useState(null);
   const [imageUpdatedMap, setImageUpdatedMap] = useState({});
+
 
   const handleOpen = (parkingLot = null) => {
     setParkingLotToEdit(parkingLot);
@@ -53,7 +55,7 @@ const MyParkingLots = () => {
           parkingLotId: parkingLotData._id,
           ownerUserId: userId,
           ...parkingLotData,
-        }).unwrap();
+        }).unwrap();       
       } else {
         // Add new parking lot
         response = await addParkingLot({
@@ -71,8 +73,21 @@ const MyParkingLots = () => {
 
       // Upload image if a new one is selected
       if (parkingLotData.avatar && parkingLotData.avatar instanceof File) {
+  
+         // Compression options
+         const options = {
+          maxSizeMB: 1, // Set maximum size to 1 MB
+          maxWidthOrHeight: 1920, // Set maximum width or height
+          useWebWorker: true, // Use web worker for better performance
+          fileType: 'image/webp', // Convert to WebP
+        };
+
+       // Compress and convert the image
+       const compressedFile = await imageCompression(parkingLotData.avatar, options);
+
+        // Upload the compressed WebP image
         await uploadImage({
-          image: parkingLotData.avatar,
+          image: compressedFile,
           path: `${userId}/myparkinglots/${response.parkingLotId}`,
         }).unwrap();
 
@@ -84,7 +99,6 @@ const MyParkingLots = () => {
       }
 
       await refetch(); // Refetch the parking lot data to update the UI
-
       handleClose(); // Close the dialog after successful submission
     } catch (err) {
       console.error("Failed to submit parking lot:", err);

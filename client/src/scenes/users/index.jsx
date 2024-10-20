@@ -11,7 +11,7 @@ import {
 import Header from "components/Header";
 import StatBox from "components/StatBox";
 import { DataGrid } from "@mui/x-data-grid";
-import { useGetUsersQuery } from "state/dataManagementApi";
+import { useGetUsersQuery } from "store/index";
 import { format } from "date-fns";
 import GroupIcon from "@mui/icons-material/Group";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";

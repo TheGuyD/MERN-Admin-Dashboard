@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { setAuth, logout } from '../store/index'; // Import your actions
+import { setAuth, logout } from "./index"; // Import your actions
 
 const baseQuery = fetchBaseQuery({
   baseUrl: "http://localhost:3000",
@@ -19,10 +19,15 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
   if (result?.error?.status === 403) {
     console.log("Sending refresh token request...");
 
-    const refreshResult = await baseQuery('/auth/refresh', api, extraOptions);
+    const refreshResult = await baseQuery("/auth/refresh", api, extraOptions);
 
     if (refreshResult?.data) {
-      api.dispatch(setAuth({ userId: refreshResult.data.userId,accessToken: refreshResult.data.accessToken }));
+      api.dispatch(
+        setAuth({
+          userId: refreshResult.data.userId,
+          accessToken: refreshResult.data.accessToken,
+        })
+      );
 
       result = await baseQuery(args, api, extraOptions);
     } else {
@@ -65,18 +70,17 @@ export const authApi = createApi({
     logout: build.mutation({
       query: () => ({
         url: "auth/logout",
-        method: "POST", 
+        method: "POST",
         credentials: "include",
       }),
       providesTags: ["Logout"],
     }),
-    
   }),
 });
 
 export const {
-    useSignupMutation,
-    useLoginMutation,
-    useRefreshQuery,
-    useLogoutMutation,
+  useSignupMutation,
+  useLoginMutation,
+  useRefreshQuery,
+  useLogoutMutation,
 } = authApi;

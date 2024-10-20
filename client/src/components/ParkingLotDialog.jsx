@@ -9,12 +9,22 @@ import {
   useTheme,
   Box,
 } from "@mui/material";
-import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import AutoFillAwareTextField from "components/AutoFillAwareTextField";
 import ImagePicker from "components/ImagePicker";
-import { useRetriveImageQuery } from "state/dataManagementApi";
+import { useRetriveImageQuery } from "store/dataManagementApi";
+import WeeklyTimePicker from "components/WeeklyTimePicker";
+
+const daysOfWeek = [
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+  'Sunday',
+];
 
 const ParkingLotDialog = ({
   open,
@@ -25,18 +35,17 @@ const ParkingLotDialog = ({
   const [parkingLotName, setParkingLotName] = useState("");
   const [address, setAddress] = useState("");
   const [hourlyParkingCost, setHourlyParkingCost] = useState("");
-  const [startingAt, setStartingAt] = useState(null);
-  const [endingAt, setEndingAt] = useState(null);
   const [numberOfParkingSlot, setNumberOfParkingSlot] = useState("");
   const [updateInterval, setUpdateInterval] = useState("");
   const [avatar, setAvatar] = useState(null);
+  const [operationHours, setOperationHours] = useState({});
   const theme = useTheme();
 
   // Fetch the current image when editing
-  const { data: imageData, refetch: refetchImage } = useRetriveImageQuery(
+  const { data: imageData } = useRetriveImageQuery(
     parkingLotToEdit
       ? {
-          imageName: "profile.png",
+          imageName: "profile.webp",
           path: `${parkingLotToEdit.ownerUserId}/myparkinglots/${parkingLotToEdit._id}`,
         }
       : null,
@@ -50,26 +59,53 @@ const ParkingLotDialog = ({
       setParkingLotName(parkingLotToEdit.parkingLotName);
       setAddress(parkingLotToEdit.address);
       setHourlyParkingCost(parkingLotToEdit.hourlyParkingCost);
-      setStartingAt(new Date(parkingLotToEdit.operationHours.startingAt));
-      setEndingAt(new Date(parkingLotToEdit.operationHours.endingAt));
       setNumberOfParkingSlot(parkingLotToEdit.numberOfParkingSlot);
       setUpdateInterval(parkingLotToEdit.updateInterval);
-      // If the user hasn't changed the image yet, use the fetched image
+
+      // Initialize operationHours with 'enabled' property
+      const initialOperationHours = {};
+      daysOfWeek.forEach((day) => {
+        const dayKey = day.toLowerCase();
+        const dayData = parkingLotToEdit.operationHours
+          ? parkingLotToEdit.operationHours[dayKey]
+          : null;
+
+        if (dayData && dayData.startingAt && dayData.startingAt !== 'Closed') {
+          initialOperationHours[day] = {
+            startingAt: parseTimeString(dayData.startingAt),
+            endingAt: parseTimeString(dayData.endingAt),
+            enabled: true,
+          };
+        } else {
+          initialOperationHours[day] = {
+            startingAt: null,
+            endingAt: null,
+            enabled: false,
+          };
+        }
+      });
+      setOperationHours(initialOperationHours);
       setAvatar(imageData?.downloadURL);
     } else {
       resetForm();
     }
   }, [parkingLotToEdit, imageData]);
 
+  const parseTimeString = (timeStr) => {
+    const [hours, minutes] = timeStr.split(':');
+    const date = new Date();
+    date.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
+    return date;
+  };
+
   const resetForm = () => {
     setParkingLotName("");
     setAddress("");
     setHourlyParkingCost("");
-    setStartingAt(null);
-    setEndingAt(null);
     setNumberOfParkingSlot("");
     setUpdateInterval("");
     setAvatar(null);
+    setOperationHours({});
   };
 
   const handleImageChange = (file) => {
@@ -80,22 +116,49 @@ const ParkingLotDialog = ({
     !parkingLotName ||
     !address ||
     !hourlyParkingCost ||
-    !startingAt ||
-    !endingAt ||
     !numberOfParkingSlot ||
-    !updateInterval;
+    !updateInterval ||
+    !Object.values(operationHours).some(
+      (day) =>
+        day.enabled &&
+        day.startingAt &&
+        day.endingAt &&
+        day.startingAt instanceof Date &&
+        day.endingAt instanceof Date
+    );
+
+  const formatTime = (date) => {
+    if (!date) return '';
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+  };
 
   const onSubmit = () => {
     if (!isSubmitDisabled) {
+      // Build operationHours object
+      const formattedOperationHours = {};
+      daysOfWeek.forEach((day) => {
+        const dayKey = day.toLowerCase();
+        if (operationHours[day].enabled) {
+          formattedOperationHours[dayKey] = {
+            startingAt: formatTime(operationHours[day].startingAt),
+            endingAt: formatTime(operationHours[day].endingAt),
+          };
+        } else {
+          formattedOperationHours[dayKey] = {
+            startingAt: 'Closed',
+            endingAt: 'Closed',
+          };
+        }
+      });
+
       handleSubmit({
         _id: parkingLotToEdit?._id,
         parkingLotName,
         address,
         hourlyParkingCost,
-        operationHours: {
-          startingAt,
-          endingAt,
-        },
+        operationHours: formattedOperationHours,
         numberOfParkingSlot,
         updateInterval,
         avatar,
@@ -148,6 +211,7 @@ const ParkingLotDialog = ({
       <DialogContent sx={{ paddingTop: "1rem" }}>
         <LocalizationProvider dateAdapter={AdapterDateFns}>
           <Grid container spacing={2.75} alignItems="center">
+            {/* Existing form fields */}
             <Grid item xs={12}>
               <AutoFillAwareTextField
                 label="Parking Lot Name"
@@ -194,44 +258,11 @@ const ParkingLotDialog = ({
                 }}
               />
             </Grid>
-            <Grid item xs={6}>
-              <TimePicker
-                label="Operation Start Time"
-                value={startingAt}
-                onChange={setStartingAt}
-                renderInput={(params) => (
-                  <AutoFillAwareTextField
-                    {...params}
-                    fullWidth
-                    required
-                    InputLabelProps={{
-                      style: {
-                        fontSize: "0.9rem",
-                        color: theme.palette.text.secondary,
-                      },
-                    }}
-                  />
-                )}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TimePicker
-                label="Operation End Time"
-                value={endingAt}
-                onChange={setEndingAt}
-                renderInput={(params) => (
-                  <AutoFillAwareTextField
-                    {...params}
-                    fullWidth
-                    required
-                    InputLabelProps={{
-                      style: {
-                        fontSize: "0.9rem",
-                        color: theme.palette.text.secondary,
-                      },
-                    }}
-                  />
-                )}
+            {/* Insert the WeeklyTimePicker component */}
+            <Grid item xs={12}>
+              <WeeklyTimePicker
+                initialTimes={operationHours}
+                onTimesChange={setOperationHours}
               />
             </Grid>
             <Grid item xs={12}>
@@ -252,7 +283,7 @@ const ParkingLotDialog = ({
             </Grid>
             <Grid item xs={12}>
               <AutoFillAwareTextField
-                label="Update Interval (in minutes)"
+                label="Update Interval (in seconds)"
                 value={updateInterval}
                 onChange={setUpdateInterval}
                 type="number"
